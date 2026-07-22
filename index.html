@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+  const supabase = createClient('https://gxggjcsqnuigubpgppby.supabase.co', 'sb_publishable_DHnV0pLqFj1qnXZn0-0yUA_9tLV-5PK')
+  window.supabase = supabase
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Aidify — O/A Level Exam Prep</title>
