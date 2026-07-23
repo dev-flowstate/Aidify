@@ -692,7 +692,8 @@ function renderProfile(){return`${renderSidebar()}<div class="main-content"><div
 
 function render(){const app=document.getElementById('app');if(!state.loggedIn){switch(state.page){case 'pricing':app.innerHTML=renderPricing();break;default:app.innerHTML=renderLanding()}}else{switch(state.page){case 'dashboard':app.innerHTML=renderDashboard();break;case 'subject':app.innerHTML=renderSubject();break;case 'community':app.innerHTML=renderCommunityPage(false);break;case 'profile':app.innerHTML=renderProfile();break;default:app.innerHTML=renderDashboard()}}}
 
-async function initAuth(){
+async function initAuth()
+  {while(!window.supabase){await new Promise(r=>setTimeout(r,50))}
   const {data:{session}}=await window.supabase.auth.getSession();
   if(session){state.loggedIn=true;state.user.name=session.user.user_metadata?.full_name||session.user.email;state.page='dashboard'}
   render();
