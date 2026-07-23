@@ -621,6 +621,12 @@ function resetUserState(name){
   state.user={name:name||'Student',username:(name||'student').toLowerCase().replace(/\s+/g,'_'),stars:0,streak:0,papersCompleted:0,subjects:[],progress:{}};
   state.trackerPapers={};state.syllabus={};state.likes={};
 }
+async function loadUserScores(){
+  const {data,error}=await window.supabase.from('scores').select('paper_code,score');
+  if(error){console.error('Load scores failed:',error);return}
+  state.trackerPapers={};
+  data.forEach(row=>{state.trackerPapers[row.paper_code]=row.score});
+}
 function toast(msg,duration=2500){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),duration)}
 function closeModal(){document.getElementById('modal').classList.add('hidden');document.getElementById('modal').innerHTML=''  }
 function showAuth(mode='login'){state.authMode=mode;const modal=document.getElementById('modal');modal.classList.remove('hidden');modal.innerHTML=renderAuthModal();modal.onclick=(e)=>{if(e.target===modal)closeModal()}}
@@ -632,7 +638,7 @@ async function doLogin(){
   const {error}=await window.supabase.auth.signInWithPassword({email,password});
   if(error){toast('Login failed: '+error.message);return}
   const {data:{user}}=await window.supabase.auth.getUser();
-  resetUserState(user?.user_metadata?.full_name||user?.email||'Student');
+  resetUserState(user?.user_metadata?.full_name||user?.email||'Student');await loadUserScores();
   state.loggedIn=true;closeModal();navigate('dashboard');toast('Welcome back! 👋')
 }
 async function doSignup(){
@@ -641,7 +647,7 @@ async function doSignup(){
   if(!name||!email||!password){toast('Please fill in all fields');return}
   const {error}=await window.supabase.auth.signUp({email,password,options:{data:{full_name:name}}});
   if(error){toast('Signup failed: '+error.message);return}
-  resetUserState(name);
+  resetUserState(name);await loadUserScores();
   state.loggedIn=true;closeModal();navigate('dashboard');toast('Account created! Welcome to Aidify 🎉')
 }
 async function logout(){
@@ -666,7 +672,7 @@ function renderSubject(){const sub=SUBJECTS[state.activeSubject];const tabConten
 
 function renderPapersTab(){const years=[...new Set(PAST_PAPERS.map(p=>p.year))].sort((a,b)=>b-a);return`<div class="flex justify-between items-center mb-4"><h2 style="font-size:18px;font-weight:800">Past Papers</h2><div class="flex gap-2"><select class="select" style="width:auto"><option>All Years</option>${years.map(y=>`<option>${y}</option>`).join('')}</select><select class="select" style="width:auto"><option>All Seasons</option><option>May/June</option><option>Oct/Nov</option><option>Feb/Mar</option></select></div></div>${years.map(year=>{const papers=PAST_PAPERS.filter(p=>p.year===year);return`<div class="card mb-3"><div class="flex items-center gap-2 mb-3"><span class="badge">${year}</span></div>${papers.map(p=>{const completed=state.trackerPapers[p.code];return`<div class="paper-row"><div><div class="font-med text-sm">${p.code}</div><div class="text-xs text-muted">${p.name} · ${p.season}</div></div><div class="flex gap-2 items-center">${completed?`<span class="badge badge-mint">✓ ${completed}/80</span>`:''}<button class="btn btn-ghost btn-sm" onclick="toast('Opening PDF...')">📄 Open PDF</button><button class="btn btn-ghost btn-sm" onclick="toast('Downloading...')">⬇ Download</button><button class="btn btn-sm ${completed?'btn-secondary':'btn-primary'}" onclick="markPaper('${p.code}')"> ${completed?'Update Score':'Mark Done'} </button></div></div>`;}).join('')}</div>`;}).join('')}`}
 
-function markPaper(code){const score=prompt(`Enter your score for ${code} (out of 80):`);if(score&&!isNaN(score)){state.trackerPapers[code]=parseInt(score);toast(`Score saved: ${score}/80 ✓`);render()}}
+async function markPaper(code){const score=prompt(`Enter your score for ${code} (out of 80):`);if(!score||isNaN(score))return;const s=parseInt(score);const {error}=await window.supabase.from('scores').upsert({paper_code:code,score:s,subject:state.activeSubject},{onConflict:'user_id,paper_code'});if(error){toast('Error saving: '+error.message);return}state.trackerPapers[code]=s;toast(`Score saved: ${score}/80 ✓`);render()}
 
 function renderGeneratorTab(){const sub=SUBJECTS[state.activeSubject];if(state.genResults)return renderGeneratorResults();return`<div class="grid grid-2 gap-4"><div><h2 style="font-size:18px;font-weight:800;margin-bottom:4px">Topical Question Generator</h2><p class="text-sm text-muted mb-4">Build a custom practice paper from real past paper questions</p><div class="gen-filter mb-3"><label class="label">Select Topics</label><div style="display:flex;flex-wrap:wrap;gap:4px">${sub.topics.map(t=>`<div class="topic-chip ${state.genTopics.includes(t)?'selected':''}" onclick="toggleTopic('${t}')">${t}</div>`).join('')}</div><div class="flex gap-2 mt-2"><button class="btn btn-ghost btn-sm" onclick="selectAllTopics()">Select All</button><button class="btn btn-ghost btn-sm" onclick="clearTopics()">Clear</button></div></div><div class="gen-filter mb-3"><label class="label">Year Range</label><div style="display:flex;flex-wrap:wrap;gap:4px">${[2019,2020,2021,2022,2023].map(y=>`<div class="topic-chip ${state.genYears.includes(y)?'selected':''}" onclick="toggleYear(${y})">${y}</div>`).join('')}</div></div><div class="grid grid-2 gap-3 mb-3"><div><label class="label">Number of Questions</label><select class="select" onchange="state.genCount=parseInt(this.value)">${[10,15,20,25,30,40,50].map(n=>`<option ${n===state.genCount?'selected':''}>${n}</option>`).join('')}</select></div><div><label class="label">Question Order</label><select class="select" onchange="state.genOrder=this.value"><option value="randomized" ${state.genOrder==='randomized'?'selected':''}>Randomized</option><option value="chronological" ${state.genOrder==='chronological'?'selected':''}>Chronological</option></select></div></div><button class="btn btn-primary btn-lg w-full" onclick="generatePaper()">🎯 Generate Paper →</button></div><div class="card-sm" style="background:rgba(255,248,240,0.8)"><h3 style="font-weight:700;margin-bottom:12px;font-size:15px">Paper Preview</h3><div style="font-size:13px;color:var(--text-muted)"><div class="flex justify-between mb-2"><span>Subject</span><span style="color:var(--text)">${sub.name}</span></div><div class="flex justify-between mb-2"><span>Topics selected</span><span style="color:var(--text)">${state.genTopics.length} topics</span></div><div class="flex justify-between mb-2"><span>Years</span><span style="color:var(--text)">${state.genYears.length?state.genYears.join(', '):'All years'}</span></div><div class="flex justify-between mb-2"><span>Questions requested</span><span style="color:var(--text)">${state.genCount}</span></div><div class="flex justify-between"><span>Order</span><span style="color:var(--text)">${state.genOrder==='randomized'?'🔀 Randomized':'📅 Chronological'}</span></div></div><div class="divider"></div><p class="text-xs text-muted">💡 Tip: If fewer questions exist than requested, all available questions will be shown.</p><div class="mt-3 p-3" style="background:rgba(168,198,149,0.15);border-radius:var(--r);border:1px solid rgba(168,198,149,0.3)"><p class="text-xs" style="color:var(--sage-dark)">ℹ️ This generator uses ONLY real past paper questions from our database — no AI-generated content.</p></div></div></div>`}
 
@@ -703,7 +709,7 @@ function render(){const app=document.getElementById('app');if(!state.loggedIn){s
 async function initAuth()
   {while(!window.supabase){await new Promise(r=>setTimeout(r,50))}
   const {data:{session}}=await window.supabase.auth.getSession();
-  if(session){resetUserState(session.user.user_metadata?.full_name||session.user.email);state.loggedIn=true;state.page='dashboard'}
+  if(session){resetUserState(session.user.user_metadata?.full_name||session.user.email);await loadUserScores();state.loggedIn=true;state.page='dashboard'}
   render();
   window.supabase.auth.onAuthStateChange((event,session)=>{
     if(event==='SIGNED_OUT'){state.loggedIn=false;render()}
