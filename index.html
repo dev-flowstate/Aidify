@@ -618,7 +618,7 @@ const SYLLABUS_CHAPTERS={math:[{name:'Pure 1',topics:['Quadratics','Functions','
 
 function navigate(page,extra={}){state.prevPage=state.page;Object.assign(state,extra);state.page=page;render();window.scrollTo(0,0)}
 function resetUserState(name){
-  state.user={name:name||'Student',username:(name||'student').toLowerCase().replace(/\s+/g,'_'),stars:0,streak:0,papersCompleted:0,subjects:[],progress:{}};
+  state.user={name:name||'Student',username:(name||'student').toLowerCase().replace(/\s+/g,'_'),stars:0,streak:0,papersCompleted:0,subjects:['math','physics','cs'],progress:{math:0,physics:0,cs:0}};
   state.trackerPapers={};state.syllabus={};state.likes={};
 }
 async function loadUserScores(){
