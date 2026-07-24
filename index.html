@@ -741,11 +741,23 @@ function renderTrackerTab(){
     const selected=!isAll&&state.trackerFilter.includes(n);
     return `<div class="topic-chip ${selected?'selected':''}" onclick="toggleTrackerFilter(${n})">Paper ${n}</div>`;
   }).join('');
-  return
+  const color=p=>p>=80?'var(--sage)':p>=50?'#7fb3d5':'#e8b4a0';
+  const header=`<div class="mb-4"><div class="flex justify-between items-center mb-3"><div><h2 style="font-size:18px;font-weight:800">Score Tracker</h2><p class="text-sm text-muted">Your logged past-paper scores</p></div><span class="badge badge-muted">${filteredPapers.length} logged</span></div><label class="label">Filter by Paper</label><div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px">${allChip}${filterChips}</div></div>`;
+  if(filteredPapers.length===0)return `${header}<div class="empty-state"><div class="icon">📊</div><p>No scores logged yet</p><p class="text-xs mt-2">Log scores from the Past Papers tab to see your progress here</p></div>`;
+  const stats=[{icon:'📄',label:'Papers Logged',val:filteredPapers.length},{icon:'📈',label:'Average',val:avg+'%'},{icon:'🏆',label:'Highest',val:maxP+'%'},{icon:'📉',label:'Lowest',val:minP+'%'}].map(a=>`<div class="stat-card"><span class="num" style="font-size:20px">${a.icon}</span><span class="num" style="font-size:20px">${a.val}</span><div class="lbl">${a.label}</div></div>`).join('');
+  const breakdown=[...filteredPapers].sort((a,b)=>b[0].localeCompare(a[0])).map(([code,score])=>{
+    const p=PAST_PAPERS.find(x=>x.code===code);
+    const pct=p?Math.round(score/p.maxMarks*100):0;
+    return `<div class="mb-4"><div class="flex justify-between mb-1"><span class="font-med text-sm">${code}${p?` · ${p.name}`:''}</span><span class="text-sm font-semi" style="color:${color(pct)}">${score}/${p?p.maxMarks:'?'} · ${pct}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color(pct)}"></div></div></div>`;
+  }).join('');
+  return `${header}<div class="grid grid-2 gap-3 mb-4">${stats}</div><div class="card"><h3 style="font-weight:800;margin-bottom:16px;font-size:16px">Score Breakdown</h3>${breakdown}</div>`;
 }
+function setTrackerFilterAll(){state.trackerFilter='all';render()}
 function toggleTrackerFilter(n){
+  if(state.trackerFilter==='all'){state.trackerFilter=[n];render();return}
   if(state.trackerFilter.includes(n))state.trackerFilter=state.trackerFilter.filter(x=>x!==n);
   else state.trackerFilter.push(n);
+  if(state.trackerFilter.length===0)state.trackerFilter='all';
   render();
 }
 
