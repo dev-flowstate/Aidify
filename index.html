@@ -695,12 +695,6 @@ function togglePapersFilter(n){
   render();
 }
 
-function togglePapersFilter(n){
-  if(state.papersFilter.includes(n))state.papersFilter=state.papersFilter.filter(x=>x!==n);
-  else state.papersFilter.push(n);
-  render();
-}
-
 function markPaper(code){const paper=PAST_PAPERS.find(p=>p.code===code);if(!paper)return;const existing=state.trackerPapers[code];const modal=document.getElementById('modal');modal.classList.remove('hidden');modal.innerHTML=`<div class="modal fade-in" onclick="event.stopPropagation()"><div class="flex items-center justify-between mb-4"><h2 style="font-size:22px;font-weight:800">${existing!==undefined?'Update Score':'Enter Score'}</h2><button class="btn-icon btn" onclick="closeModal()">✕</button></div><p class="text-muted text-sm mb-4">${code} · ${paper.name} · ${paper.season} ${paper.year}</p><div style="margin-bottom:20px"><label class="label">Your Score (out of ${paper.maxMarks})</label><input id="scoreInput" class="input" type="number" min="0" max="${paper.maxMarks}" placeholder="e.g. ${Math.floor(paper.maxMarks*0.7)}" value="${existing!==undefined?existing:''}" autofocus /></div><button class="btn btn-primary w-full btn-lg" onclick="saveScore('${code}',${paper.maxMarks})">${existing!==undefined?'Update Score':'Save Score'}</button>${existing!==undefined?`<button class="btn btn-ghost w-full mt-2" style="color:#e8b4a0" onclick="deleteScore('${code}')">Remove Score</button>`:''}</div>`;modal.onclick=(e)=>{if(e.target===modal)closeModal()};setTimeout(()=>{const inp=document.getElementById('scoreInput');if(inp){inp.focus();inp.addEventListener('keydown',e=>{if(e.key==='Enter')saveScore(code,paper.maxMarks)})}},50)}
 
 async function saveScore(code,max){const inp=document.getElementById('scoreInput');const val=inp.value.trim();if(!val||isNaN(val)){toast('Please enter a valid number');return}const s=parseInt(val);if(s<0||s>max){toast(`Score must be between 0 and ${max}`);return}const {error}=await window.supabase.from('scores').upsert({paper_code:code,score:s,subject:state.activeSubject},{onConflict:'user_id,paper_code'});if(error){toast('Error saving: '+error.message);return}state.trackerPapers[code]=s;closeModal();toast(`Score saved: ${s}/${max} (${Math.round(s/max*100)}%) ✓`);render()}
