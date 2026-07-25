@@ -604,7 +604,7 @@ footer{background:rgba(249,247,244,0.95);border-top:1px solid var(--border);padd
 <button id="report-fab" class="btn btn-primary hidden" onclick="reportBug()" title="Report a bug">🐞 Report a bug</button>
 
 <script>
-const state={dark:false,theme:'light',page:'landing',prevPage:null,loggedIn:false,authMode:'login',activeSubject:'math',subjectTab:'papers',genStep:1,genTopics:[],genYears:[],genCount:20,genOrder:'randomized',genResults:false,showAnswers:{},genChapters:[],genDifficulty:[],topicalView:'all',topicalQuestions:[],topicalAttempts:{},trackerPapers:{'9709/42/M/J/23':75,'9709/41/M/J/23':68,'9709/42/O/N/22':82,'9709/41/O/N/22':71,'9709/42/M/J/22':64},syllabus:{},likes:{},bookmarks:{},user:{name:'Ahmed Khan',username:'ahmedkhan',subjects:['math','physics'],stars:247,streak:7,papersCompleted:14,progress:{math:68,physics:45}}};
+const state={dark:false,theme:'light',page:'landing',prevPage:null,loggedIn:false,authMode:'login',activeSubject:'math',subjectTab:'papers',genStep:1,genTopics:[],genYears:[],genCount:20,genOrder:'randomized',genResults:false,showAnswers:{},genChapters:[],genDifficulty:[],topicalView:'all',topicalQuestions:[],topicalAttempts:{},trackerPapers:{'9709/42/M/J/23':75,'9709/41/M/J/23':68,'9709/42/O/N/22':82,'9709/41/O/N/22':71,'9709/42/M/J/22':64},syllabus:{},syllabusOpen:{},likes:{},bookmarks:{},user:{name:'Ahmed Khan',username:'ahmedkhan',subjects:['math','physics'],stars:247,streak:7,papersCompleted:14,progress:{math:68,physics:45}}};
 
 function toggleDark(){state.dark=!state.dark;document.documentElement.classList.toggle('dark',state.dark);document.querySelectorAll('#dm-toggle').forEach(b=>{b.textContent=state.dark?'☀️ Light':'🌊 Dark'});}
 
@@ -618,12 +618,70 @@ const RESOURCES=[{type:'video',title:'Integration by Parts — Full Explanation'
 
 const HARDEST=[{q:'Q1',topic:'Integration',year:'O/N/21',paper:'42',difficulty:'Very Hard',desc:'Integration by parts with substitution — multi-step'},{q:'Q2',topic:'Mechanics',year:'M/J/22',paper:'41',difficulty:'Hard',desc:'Projectile motion with variable resistance'},{q:'Q3',topic:'Complex Numbers',year:'O/N/20',paper:'42',difficulty:'Very Hard',desc:'Modulus-argument form with loci'},{q:'Q4',topic:'Differential Equations',year:'M/J/21',paper:'42',difficulty:'Hard',desc:'First-order linear ODE with boundary conditions'},{q:'Q5',topic:'Vectors',year:'O/N/22',paper:'41',difficulty:'Very Hard',desc:'3D vectors — shortest distance between skew lines'}];
 
-const SYLLABUS_CHAPTERS={math:[{name:'Pure 1',topics:['Quadratics','Functions','Coordinate Geometry','Circular Measure','Trigonometry','Vectors','Series','Differentiation','Integration']},{name:'Pure 2 & 3',topics:['Algebra','Logarithmic Functions','Trigonometry','Differentiation','Integration','Numerical Methods','Vectors','Complex Numbers','Differential Equations']},{name:'Statistics',topics:['Representation of Data','Permutations & Combinations','Probability','Discrete Random Variables','Normal Distribution']},{name:'Mechanics',topics:["Newton's Laws",'Kinematics','Energy & Power','Equilibrium','Elastic Strings','Circular Motion']}]};
+const SYLLABUS_CHAPTERS={
+  math:[
+    {name:'Paper 1: Pure Mathematics 1',topics:['Quadratics','Functions','Coordinate geometry','Circular measure','Trigonometry','Series','Differentiation','Integration']},
+    {name:'Paper 2: Pure Mathematics 2',topics:['Algebra','Logarithmic and exponential functions','Trigonometry','Differentiation','Integration','Numerical solution of equations']},
+    {name:'Paper 3: Pure Mathematics 3',topics:['Algebra','Logarithmic and exponential functions','Trigonometry','Differentiation','Integration','Numerical solution of equations','Vectors','Differential equations','Complex numbers']},
+    {name:'Paper 4: Mechanics',topics:['Forces and equilibrium','Kinematics of motion in a straight line','Momentum',"Newton's laws of motion",'Energy, work and power']},
+    {name:'Paper 5: Probability & Statistics 1',topics:['Representation of data','Permutations and combinations','Probability','Discrete random variables','The normal distribution']},
+    {name:'Paper 6: Probability & Statistics 2',topics:['The Poisson distribution','Linear combinations of random variables','Continuous random variables','Sampling and estimation','Hypothesis tests']}
+  ],
+  physics:[
+    {name:'1. Physical quantities and units',topics:['Physical quantities','SI units','Errors and uncertainties','Scalars and vectors']},
+    {name:'2. Kinematics',topics:['Equations of motion']},
+    {name:'3. Dynamics',topics:["Momentum and Newton's laws of motion",'Non-uniform motion','Linear momentum and its conservation']},
+    {name:'4. Forces, density and pressure',topics:['Turning effects of forces','Equilibrium of forces','Density and pressure']},
+    {name:'5. Work, energy and power',topics:['Energy conservation','Gravitational potential energy and kinetic energy']},
+    {name:'6. Deformation of solids',topics:['Stress and strain','Elastic and plastic behaviour']},
+    {name:'7. Waves',topics:['Progressive waves','Transverse and longitudinal waves','Doppler effect for sound waves','Electromagnetic spectrum','Polarisation']},
+    {name:'8. Superposition',topics:['Stationary waves','Diffraction','Interference','The diffraction grating']},
+    {name:'9. Electricity',topics:['Electric current','Potential difference and power','Resistance and resistivity']},
+    {name:'10. D.C. circuits',topics:['Practical circuits',"Kirchhoff's laws",'Potential dividers']},
+    {name:'11. Particle physics',topics:['Atoms, nuclei and radiation','Fundamental particles']},
+    {name:'12. Motion in a circle',topics:['Kinematics of uniform circular motion','Centripetal acceleration']},
+    {name:'13. Gravitational fields',topics:['Gravitational field','Gravitational force between point masses','Gravitational field of a point mass','Gravitational potential']},
+    {name:'14. Temperature',topics:['Thermal equilibrium','Temperature scales','Specific heat capacity and specific latent heat']},
+    {name:'15. Ideal gases',topics:['The mole','Equation of state','Kinetic theory of gases']},
+    {name:'16. Thermodynamics',topics:['Internal energy','The first law of thermodynamics']},
+    {name:'17. Oscillations',topics:['Simple harmonic oscillations','Energy in simple harmonic motion','Damped and forced oscillations, resonance']},
+    {name:'18. Electric fields',topics:['Electric fields and field lines','Uniform electric fields','Electric force between point charges','Electric field of a point charge','Electric potential']},
+    {name:'19. Capacitance',topics:['Capacitors and capacitance','Energy stored in a capacitor','Discharging a capacitor']},
+    {name:'20. Magnetic fields',topics:['Concept of a magnetic field','Force on a current-carrying conductor','Force on a moving charge','Magnetic fields due to currents','Electromagnetic induction']},
+    {name:'21. Alternating currents',topics:['Characteristics of alternating currents','Rectification and smoothing']},
+    {name:'22. Quantum physics',topics:['Energy and momentum of a photon','Photoelectric effect','Wave-particle duality','Energy levels in atoms and line spectra']},
+    {name:'23. Nuclear physics',topics:['Mass defect and nuclear binding energy','Radioactive decay']},
+    {name:'24. Medical physics',topics:['Production and use of ultrasound','Production and use of X-rays','PET scanning']},
+    {name:'25. Astronomy and cosmology',topics:['Standard candles','Stellar radii',"Hubble's law and the Big Bang theory"]}
+  ],
+  cs:[
+    {name:'1. Information representation',topics:['Data Representation','Multimedia (Graphics, Sound)','Compression']},
+    {name:'2. Communication',topics:['Networks including the internet']},
+    {name:'3. Hardware',topics:['Computers and their components','Logic Gates and Logic Circuits']},
+    {name:'4. Processor Fundamentals',topics:['Central Processing Unit (CPU) Architecture','Assembly Language','Bit manipulation']},
+    {name:'5. System Software',topics:['Operating Systems','Language Translators']},
+    {name:'6. Security, privacy and data integrity',topics:['Data Security','Data Integrity']},
+    {name:'7. Ethics and Ownership',topics:['Ethics and Ownership']},
+    {name:'8. Databases',topics:['Database Concepts','Database Management Systems (DBMS)','Data Definition Language (DDL) and Data Manipulation Language (DML)']},
+    {name:'9. Algorithm Design and Problem-solving',topics:['Computational Thinking Skills','Algorithms']},
+    {name:'10. Data Types and Structures',topics:['Data Types and Records','Arrays','Files','Introduction to Abstract Data Types (ADT)']},
+    {name:'11. Programming',topics:['Programming Basics','Constructs','Structured Programming']},
+    {name:'12. Software Development',topics:['Program Development Life cycle','Program Design','Program Testing and Maintenance']},
+    {name:'13. Data Representation (A Level)',topics:['User-defined data types','File organisation and access','Floating-point numbers, representation and manipulation']},
+    {name:'14. Communication and internet technologies',topics:['Protocols','Circuit switching, packet switching']},
+    {name:'15. Hardware and Virtual Machines',topics:['Processors, Parallel Processing and Virtual Machines','Boolean Algebra and Logic Circuits']},
+    {name:'16. System Software (A Level)',topics:['Purposes of an Operating System (OS)','Translation Software']},
+    {name:'17. Security (A Level)',topics:['Encryption, Encryption Protocols and Digital certificates']},
+    {name:'18. Artificial Intelligence (AI)',topics:['Artificial Intelligence']},
+    {name:'19. Computational thinking and Problem-solving',topics:['Algorithms','Recursion']},
+    {name:'20. Further Programming',topics:['Programming Paradigms','File Processing and Exception Handling']}
+  ]
+};
 
 function navigate(page,extra={}){state.prevPage=state.page;Object.assign(state,extra);state.page=page;render();window.scrollTo(0,0)}
 function resetUserState(name){
   state.user={name:name||'Student',username:(name||'student').toLowerCase().replace(/\s+/g,'_'),stars:0,streak:0,papersCompleted:0,subjects:['math','physics','cs'],progress:{math:0,physics:0,cs:0}};
-  state.trackerPapers={};state.syllabus={};state.likes={};
+  state.trackerPapers={};state.syllabus={};state.syllabusOpen={};state.likes={};
 }
 async function loadUserScores(){
   const {data,error}=await window.supabase.from('scores').select('paper_code,score');
@@ -795,9 +853,25 @@ function toggleTrackerFilter(n){
   render();
 }
 
-function renderSyllabusTab(){const chapters=SYLLABUS_CHAPTERS.math||[];return`<div class="flex justify-between items-center mb-4"><div><h2 style="font-size:18px;font-weight:800">Syllabus Tracker</h2><p class="text-sm text-muted">Track your syllabus completion chapter by chapter</p></div><div class="badge"> ${Object.keys(state.syllabus).length} / ${chapters.reduce((s,c)=>s+c.topics.length,0)} topics done </div></div>${chapters.map((ch,ci)=>`<div style="margin-bottom:16px"><div class="flex items-center justify-between mb-2"><h3 style="font-weight:700;font-size:15px">${ch.name}</h3><span class="text-xs text-muted">${ch.topics.filter(t=>state.syllabus[ci+'-'+t]).length}/${ch.topics.length} topics</span></div><div class="progress-bar mb-2"><div class="progress-fill" style="width:${Math.round(ch.topics.filter(t=>state.syllabus[ci+'-'+t]).length/ch.topics.length*100)}%"></div></div>${ch.topics.map(t=>{const key=ci+'-'+t;const done=state.syllabus[key];return`<div class="subtopic ${done?'done':''}" onclick="toggleSyllabus('${key}');event.stopPropagation()"><input type="checkbox" class="checkbox" ${done?'checked':''} onclick="toggleSyllabus('${key}')"> ${t}</div>`;}).join('')}</div>`).join('')}`}
+function renderSyllabusTab(){
+  const sub=state.activeSubject;
+  const chapters=SYLLABUS_CHAPTERS[sub]||[];
+  let total=0,done=0;
+  chapters.forEach((ch,ci)=>ch.topics.forEach((t,ti)=>{total++;if(state.syllabus[`${sub}-${ci}-${ti}`])done++}));
+  const pct=total?Math.round(done/total*100):0;
+  const head=`<div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:8px"><div><h2 style="font-size:18px;font-weight:800">Syllabus Tracker</h2><p class="text-sm text-muted">Tick off topics as you master them · ${sub==='math'?'grouped by paper':'grouped by topic'}</p></div><span class="badge badge-mint">${done} / ${total} · ${pct}%</span></div><div class="progress-bar mb-4" style="height:10px"><div class="progress-fill" style="width:${pct}%"></div></div>`;
+  if(!chapters.length)return `${head}<div class="empty-state"><div class="icon">✅</div><p>No syllabus available for this subject yet</p></div>`;
+  const body=chapters.map((ch,ci)=>{
+    const okey=`${sub}-${ci}`;const open=state.syllabusOpen[okey];
+    const cDone=ch.topics.reduce((n,t,ti)=>n+(state.syllabus[`${sub}-${ci}-${ti}`]?1:0),0);
+    const cPct=ch.topics.length?Math.round(cDone/ch.topics.length*100):0;
+    return `<div class="card mb-2" style="padding:0;overflow:hidden"><div onclick="toggleSyllabusChapter('${okey}')" style="cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="display:inline-block;font-size:11px;color:var(--text-muted);transform:rotate(${open?90:0}deg);transition:transform .2s">▶</span><div style="flex:1;min-width:0"><div class="font-semi text-sm">${ch.name}</div><div class="progress-bar mt-1" style="height:5px"><div class="progress-fill" style="width:${cPct}%"></div></div></div><span class="text-xs text-muted" style="white-space:nowrap">${cDone}/${ch.topics.length}</span></div><div style="display:${open?'block':'none'};padding:0 16px 12px 42px">${ch.topics.map((t,ti)=>{const key=`${sub}-${ci}-${ti}`;const d=state.syllabus[key];return `<label class="subtopic ${d?'done':''}" style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" class="checkbox" ${d?'checked':''} onchange="toggleSyllabus('${key}')">${t}</label>`;}).join('')}</div></div>`;
+  }).join('');
+  return `${head}${body}`;
+}
 
-function toggleSyllabus(key){state.syllabus[key]=!state.syllabus[key];toast(state.syllabus[key]?'Topic marked complete ✓':'Topic unmarked');render()}
+function toggleSyllabus(key){state.syllabus[key]=!state.syllabus[key];render()}
+function toggleSyllabusChapter(k){if(!state.syllabusOpen)state.syllabusOpen={};state.syllabusOpen[k]=!state.syllabusOpen[k];render()}
 
 function renderCommunityTab(){return renderCommunityPage(true)}
 
