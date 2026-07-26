@@ -1,6 +1,9 @@
 # Claude Code local config
 .claude/
 
+# Graphify output
+graphify-out/
+
 # OS / editor junk
 .DS_Store
 Thumbs.db
