@@ -611,7 +611,7 @@ footer{background:rgba(249,247,244,0.95);border-top:1px solid var(--border);padd
 <button id="sbOpen" class="hidden" onclick="toggleSidebar()" title="Open menu">☰</button>
 
 <script>
-const state={dark:false,theme:'light',sidebarCollapsed:false,page:'landing',prevPage:null,loggedIn:false,authMode:'login',activeSubject:'math',subjectTab:'papers',genStep:1,genTopics:[],genYears:[],genCount:20,genOrder:'randomized',genResults:false,showAnswers:{},genChapters:[],genDifficulty:[],topicalView:'all',wrongOpen:true,wrongSubject:'all',topicalQuestions:[],topicalAttempts:{},timer:{mode:'stopwatch',running:false,base:0,startedAt:0,setMs:1500000},resetHour:4,studyTotalMs:0,studyDayKey:'',trackerPapers:{'9709/42/M/J/23':75,'9709/41/M/J/23':68,'9709/42/O/N/22':82,'9709/41/O/N/22':71,'9709/42/M/J/22':64},syllabus:{},syllabusOpen:{},likes:{},bookmarks:{},user:{name:'Ahmed Khan',username:'ahmedkhan',subjects:['math','physics'],stars:247,streak:7,papersCompleted:14,progress:{math:68,physics:45}}};
+const state={dark:false,theme:'light',sidebarCollapsed:false,page:'landing',prevPage:null,loggedIn:false,authMode:'login',activeSubject:'math',subjectTab:'papers',genStep:1,genTopics:[],genYears:[],genCount:20,genOrder:'randomized',genResults:false,showAnswers:{},genChapters:[],genPapers:[],genDifficulty:[],topicalView:'all',wrongOpen:true,wrongSubject:'all',topicalQuestions:[],topicalAttempts:{},timer:{mode:'stopwatch',running:false,base:0,startedAt:0,setMs:1500000},resetHour:4,studyTotalMs:0,studyDayKey:'',trackerPapers:{'9709/42/M/J/23':75,'9709/41/M/J/23':68,'9709/42/O/N/22':82,'9709/41/O/N/22':71,'9709/42/M/J/22':64},syllabus:{},syllabusOpen:{},likes:{},bookmarks:{},user:{name:'Ahmed Khan',username:'ahmedkhan',subjects:['math','physics'],stars:247,streak:7,papersCompleted:14,progress:{math:68,physics:45}}};
 
 function toggleDark(){state.dark=!state.dark;document.documentElement.classList.toggle('dark',state.dark);document.querySelectorAll('#dm-toggle').forEach(b=>{b.textContent=state.dark?'☀️ Light':'🌊 Dark'});}
 
@@ -790,14 +790,16 @@ function renderGeneratorTab(){
   const all=state.topicalQuestions.filter(q=>q.subject===state.activeSubject);
   const chapters=[...new Set(all.map(q=>q.chapter).filter(Boolean))].sort();
   const years=[...new Set(all.map(q=>q.year).filter(Boolean))].sort((a,b)=>b-a);
+  const papers=[...new Set(all.map(q=>q.paper).filter(v=>v!=null&&v!==''))].sort((a,b)=>a-b);
   const diffs=['Easy','Medium','Hard'];
   let list=all;
   if(state.genChapters.length)list=list.filter(q=>state.genChapters.includes(q.chapter));
+  if(state.genPapers.length)list=list.filter(q=>state.genPapers.includes(q.paper));
   if(state.genYears.length)list=list.filter(q=>state.genYears.includes(q.year));
   if(state.genDifficulty.length)list=list.filter(q=>state.genDifficulty.includes(q.difficulty));
   const chip=(label,sel,onclick)=>`<div class="topic-chip ${sel?'selected':''}" onclick="${onclick}">${label}</div>`;
   const esc=s=>String(s).replace(/'/g,"\\'");
-  const filters=`<div class="card mb-4"><div class="mb-3"><h2 style="font-size:18px;font-weight:800">All Questions (${all.length})</h2><p class="text-sm text-muted">Practise past-paper questions by topic · ⭐ 1 star per correct answer</p></div><label class="label">Chapter</label><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${chapters.length?chapters.map(c=>chip(c,state.genChapters.includes(c),`toggleChapter('${esc(c)}')`)).join(''):'<span class="text-xs text-muted">No chapters yet</span>'}</div><label class="label">Year</label><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${years.length?years.map(y=>chip(y,state.genYears.includes(y),`toggleYear(${y})`)).join(''):'<span class="text-xs text-muted">—</span>'}</div><label class="label">Difficulty</label><div style="display:flex;flex-wrap:wrap;gap:4px">${diffs.map(d=>chip(d,state.genDifficulty.includes(d),`toggleDifficulty('${d}')`)).join('')}</div></div>`;
+  const filters=`<div class="card mb-4"><div class="mb-3"><h2 style="font-size:18px;font-weight:800">All Questions (${all.length})</h2><p class="text-sm text-muted">Practise past-paper questions by topic · ⭐ 1 star per correct answer</p></div><label class="label">Chapter</label><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${chapters.length?chapters.map(c=>chip(c,state.genChapters.includes(c),`toggleChapter('${esc(c)}')`)).join(''):'<span class="text-xs text-muted">No chapters yet</span>'}</div><label class="label">Paper</label><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${papers.length?papers.map(p=>chip(`Paper ${p}`,state.genPapers.includes(p),`togglePaper(${p})`)).join(''):'<span class="text-xs text-muted">No papers yet</span>'}</div><label class="label">Year</label><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${years.length?years.map(y=>chip(y,state.genYears.includes(y),`toggleYear(${y})`)).join(''):'<span class="text-xs text-muted">—</span>'}</div><label class="label">Difficulty</label><div style="display:flex;flex-wrap:wrap;gap:4px">${diffs.map(d=>chip(d,state.genDifficulty.includes(d),`toggleDifficulty('${d}')`)).join('')}</div></div>`;
   if(all.length===0)return `${filters}<div class="empty-state"><div class="icon">🎯</div><p>No topical questions yet</p><p class="text-xs mt-2">Add questions to your Supabase <b>topical_questions</b> table and they'll show up here automatically.</p></div>`;
   const body=list.length===0?`<div class="empty-state"><div class="icon">🔍</div><p>No questions match your filters</p></div>`:list.map(renderQuestionCard).join('');
   return `${filters}${body}`;
@@ -810,6 +812,7 @@ function renderQuestionCard(q){
 }
 function toggleYear(y){if(state.genYears.includes(y))state.genYears=state.genYears.filter(x=>x!==y);else state.genYears.push(y);render()}
 function toggleChapter(c){if(state.genChapters.includes(c))state.genChapters=state.genChapters.filter(x=>x!==c);else state.genChapters.push(c);render()}
+function togglePaper(p){if(state.genPapers.includes(p))state.genPapers=state.genPapers.filter(x=>x!==p);else state.genPapers.push(p);render()}
 function toggleDifficulty(d){if(state.genDifficulty.includes(d))state.genDifficulty=state.genDifficulty.filter(x=>x!==d);else state.genDifficulty.push(d);render()}
 function setTopicalView(v){state.topicalView=v;render()}
 function toggleTopicalAnswer(id){state.showAnswers[id]=!state.showAnswers[id];render()}
