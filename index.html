@@ -627,12 +627,56 @@ const HARDEST=[{q:'Q1',topic:'Integration',year:'O/N/21',paper:'42',difficulty:'
 
 const SYLLABUS_CHAPTERS={
   math:[
-    {name:'Paper 1: Pure Mathematics 1',topics:['Quadratics','Functions','Coordinate geometry','Circular measure','Trigonometry','Series','Differentiation','Integration']},
-    {name:'Paper 2: Pure Mathematics 2',topics:['Algebra','Logarithmic and exponential functions','Trigonometry','Differentiation','Integration','Numerical solution of equations']},
-    {name:'Paper 3: Pure Mathematics 3',topics:['Algebra','Logarithmic and exponential functions','Trigonometry','Differentiation','Integration','Numerical solution of equations','Vectors','Differential equations','Complex numbers']},
-    {name:'Paper 4: Mechanics',topics:['Forces and equilibrium','Kinematics of motion in a straight line','Momentum',"Newton's laws of motion",'Energy, work and power']},
-    {name:'Paper 5: Probability & Statistics 1',topics:['Representation of data','Permutations and combinations','Probability','Discrete random variables','The normal distribution']},
-    {name:'Paper 6: Probability & Statistics 2',topics:['The Poisson distribution','Linear combinations of random variables','Continuous random variables','Sampling and estimation','Hypothesis tests']}
+    {name:'Paper 1: Pure Mathematics 1',topics:[
+      {name:'Quadratics',subs:['Completing the square','Discriminant & number of roots','Solve quadratic equations & inequalities','Linear-quadratic simultaneous equations','Equations quadratic in a function of x']},
+      {name:'Functions',subs:['Domain, range, one-one, inverse, composition','Find range & composite functions','Determine one-one & find the inverse','Graph of a function and its inverse','Transformations of graphs']},
+      {name:'Coordinate geometry',subs:['Equation of a straight line','Distances, gradients, midpoints, parallel & perpendicular','Equation of a circle','Problems with lines & circles','Intersections of graphs & equations']},
+      {name:'Circular measure',subs:['Radians & degree conversion','Arc length & sector area']},
+      {name:'Trigonometry',subs:['Graphs of sin, cos, tan','Exact values (30, 45, 60 degrees)','Inverse trig (principal values)','Identities: tan=sin/cos and sin^2+cos^2=1','Solve trig equations in an interval']},
+      {name:'Series',subs:['Binomial expansion of (a+b)^n','Recognise AP & GP','nth term & sum of AP/GP','Convergence & sum to infinity of a GP']},
+      {name:'Differentiation',subs:['Gradient as a limit & derivative notation','Differentiate x^n, sums & chain rule','Tangents, normals, increasing/decreasing, rates','Stationary points & their nature']},
+      {name:'Integration',subs:['Integrate (ax+b)^n','Find the constant of integration','Evaluate definite integrals','Area under a curve & volume of revolution']}
+    ]},
+    {name:'Paper 2: Pure Mathematics 2',topics:[
+      {name:'Algebra',subs:['Modulus |x| and graph of |ax+b|','Divide polynomials (degree up to 4)','Factor & remainder theorems']},
+      {name:'Logarithmic & exponential functions',subs:['Logs, indices & laws of logarithms','e^x and ln x, graphs & inverse relationship','Solve equations with unknown in the index','Reduce a relationship to linear form']},
+      {name:'Trigonometry',subs:['sec, cosec, cot & their graphs','Identities, addition & double-angle, R-form']},
+      {name:'Differentiation',subs:['Derivatives of e^x, ln x, sin, cos, tan & composites','Product & quotient rules','Parametric & implicit differentiation']},
+      {name:'Integration',subs:['Integrate e^(ax+b), 1/(ax+b), sin/cos/sec^2(ax+b)','Use trig relationships to integrate','Trapezium rule']},
+      {name:'Numerical solution of equations',subs:['Locate a root by sign change or graph','Sequence of approximations to a root','Iterative formula x(n+1)=F(x(n))']}
+    ]},
+    {name:'Paper 3: Pure Mathematics 3',topics:[
+      {name:'Algebra',subs:['Modulus |x| and graph of |ax+b|','Divide polynomials (degree up to 4)','Factor & remainder theorems','Partial fractions','Binomial expansion of (1+x)^n for rational n']},
+      {name:'Logarithmic & exponential functions',subs:['Logs, indices & laws of logarithms','e^x and ln x, graphs & inverse relationship','Solve equations with unknown in the index','Reduce a relationship to linear form']},
+      {name:'Trigonometry',subs:['sec, cosec, cot & their graphs','Identities, addition & double-angle, R-form']},
+      {name:'Differentiation',subs:['Derivatives incl. inverse tan & composites','Product & quotient rules','Parametric & implicit differentiation']},
+      {name:'Integration',subs:['Standard integrals incl. 1/(x^2+a^2)','Use trig relationships to integrate','Integrate using partial fractions','Recognise k f-prime(x)/f(x)','Integration by parts','Integration by substitution']},
+      {name:'Numerical solution of equations',subs:['Locate a root by sign change or graph','Sequence of approximations to a root','Iterative formula x(n+1)=F(x(n))']},
+      {name:'Vectors',subs:['Vector notation','Add, subtract & scale vectors','Magnitude, unit, displacement & position vectors','Line equation r=a+tb','Parallel, intersecting or skew lines','Scalar product: angles & foot of perpendicular']},
+      {name:'Differential equations',subs:['Form a differential equation from a rate','Solve first-order separable equations','Use an initial condition','Interpret the solution in context']},
+      {name:'Complex numbers',subs:['Real/imaginary part, modulus, argument, conjugate','Add, subtract, multiply & divide (Cartesian)','Conjugate pairs of roots','Argand diagram','Multiply & divide in polar form','Square roots of a complex number','Geometric effect of the operations','Loci in an Argand diagram']}
+    ]},
+    {name:'Paper 4: Mechanics',topics:[
+      {name:'Forces and equilibrium',subs:['Identify forces (force diagram)','Components & resultants','Equilibrium by resolving forces','Normal & frictional contact components','Smooth-contact model','Limiting friction and F = mu R',"Newton's third law"]},
+      {name:'Kinematics of motion in a straight line',subs:['Distance, speed, displacement, velocity, acceleration','Displacement-time & velocity-time graphs','Calculus for kinematics','Constant-acceleration equations']},
+      {name:'Momentum',subs:['Linear momentum (mass x velocity)','Conservation of momentum in direct impact']},
+      {name:"Newton's laws of motion",subs:['Apply F = ma with constant forces','Weight W = mg','Motion vertically or on an inclined plane','Connected particles']},
+      {name:'Energy, work and power',subs:['Work done by a force','Gravitational PE & kinetic energy','Energy change & conservation of energy','Power P = Fv']}
+    ]},
+    {name:'Paper 5: Probability & Statistics 1',topics:[
+      {name:'Representation of data',subs:['Choose a representation & discuss pros/cons','Stem-and-leaf, box plots, histograms, cumulative frequency','Mean/median/mode & range/IQR/standard deviation','Use a cumulative frequency graph','Mean & SD from data or (coded) totals']},
+      {name:'Permutations and combinations',subs:['Terms permutation & combination','Arrangements in a line (repetition & restriction)']},
+      {name:'Probability',subs:['Probability by enumeration or counting','Addition & multiplication of probabilities','Exclusive & independent events','Conditional probability']},
+      {name:'Discrete random variables',subs:['Probability distribution table, E(X) & Var(X)','Binomial & geometric distributions','Expectation & variance formulae']},
+      {name:'The normal distribution',subs:['Model with the normal distribution & use tables','Solve problems with N(mu, sigma^2)','Normal approximation to the binomial']}
+    ]},
+    {name:'Paper 6: Probability & Statistics 2',topics:[
+      {name:'The Poisson distribution',subs:['Poisson probabilities','Mean = variance = lambda','Poisson as a model','Poisson approximation to the binomial','Normal approximation to the Poisson']},
+      {name:'Linear combinations of random variables',subs:['E & Var of aX+b and aX+bY','Normal & Poisson combination results']},
+      {name:'Continuous random variables',subs:['Properties of a probability density function','Use a pdf for probabilities, mean, variance & median']},
+      {name:'Sampling and estimation',subs:['Sample vs population & the need for randomness','Why a sampling method may be unsatisfactory','Sample mean as a random variable (E & Var)','Distribution of the sample mean','Central Limit Theorem','Unbiased estimates of mean & variance','Confidence interval for a mean','Confidence interval for a proportion']},
+      {name:'Hypothesis tests',subs:['Nature of a hypothesis test & its terms','Test on a binomial or Poisson','Test on a population mean','Type I & Type II errors','Probabilities of Type I & II errors']}
+    ]}
   ],
   physics:[
     {name:'1. Physical quantities and units',topics:['Physical quantities','SI units','Errors and uncertainties','Scalars and vectors']},
@@ -873,16 +917,30 @@ function toggleTrackerFilter(n){
 function renderSyllabusTab(){
   const sub=state.activeSubject;
   const chapters=SYLLABUS_CHAPTERS[sub]||[];
+  const norm=t=>typeof t==='string'?{name:t,subs:[]}:{name:t.name,subs:Array.isArray(t.subs)?t.subs:[]};
+  const unitKeys=(ci,ti,n)=>n.subs.length?n.subs.map((s,si)=>`${sub}-${ci}-${ti}-${si}`):[`${sub}-${ci}-${ti}`];
   let total=0,done=0;
-  chapters.forEach((ch,ci)=>ch.topics.forEach((t,ti)=>{total++;if(state.syllabus[`${sub}-${ci}-${ti}`])done++}));
+  chapters.forEach((ch,ci)=>ch.topics.forEach((t,ti)=>unitKeys(ci,ti,norm(t)).forEach(k=>{total++;if(state.syllabus[k])done++})));
   const pct=total?Math.round(done/total*100):0;
   const head=`<div class="flex justify-between items-center mb-2" style="flex-wrap:wrap;gap:8px"><div><h2 style="font-size:18px;font-weight:800">Syllabus Tracker</h2><p class="text-sm text-muted">Tick off topics as you master them · ${sub==='math'?'grouped by paper':'grouped by topic'}</p></div><span class="badge badge-mint">${done} / ${total} · ${pct}%</span></div><div class="progress-bar mb-4" style="height:10px"><div class="progress-fill" style="width:${pct}%"></div></div>`;
   if(!chapters.length)return `${head}<div class="empty-state"><div class="icon">✅</div><p>No syllabus available for this subject yet</p></div>`;
   const body=chapters.map((ch,ci)=>{
     const okey=`${sub}-${ci}`;const open=state.syllabusOpen[okey];
-    const cDone=ch.topics.reduce((n,t,ti)=>n+(state.syllabus[`${sub}-${ci}-${ti}`]?1:0),0);
-    const cPct=ch.topics.length?Math.round(cDone/ch.topics.length*100):0;
-    return `<div class="card mb-2" style="padding:0;overflow:hidden"><div onclick="toggleSyllabusChapter('${okey}')" style="cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="display:inline-block;font-size:11px;color:var(--text-muted);transform:rotate(${open?90:0}deg);transition:transform .2s">▶</span><div style="flex:1;min-width:0"><div class="font-semi text-sm">${ch.name}</div><div class="progress-bar mt-1" style="height:5px"><div class="progress-fill" style="width:${cPct}%"></div></div></div><span class="text-xs text-muted" style="white-space:nowrap">${cDone}/${ch.topics.length}</span></div><div style="display:${open?'block':'none'};padding:0 16px 12px 42px">${ch.topics.map((t,ti)=>{const key=`${sub}-${ci}-${ti}`;const d=state.syllabus[key];return `<label class="subtopic ${d?'done':''}" style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" class="checkbox" ${d?'checked':''} onchange="toggleSyllabus('${key}')">${t}</label>`;}).join('')}</div></div>`;
+    let cTotal=0,cDone=0;
+    ch.topics.forEach((t,ti)=>unitKeys(ci,ti,norm(t)).forEach(k=>{cTotal++;if(state.syllabus[k])cDone++}));
+    const cPct=cTotal?Math.round(cDone/cTotal*100):0;
+    const topicsHtml=ch.topics.map((t,ti)=>{
+      const n=norm(t);
+      if(!n.subs.length){
+        const key=`${sub}-${ci}-${ti}`;const d=state.syllabus[key];
+        return `<label class="subtopic ${d?'done':''}" style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" class="checkbox" ${d?'checked':''} onchange="toggleSyllabus('${key}')">${n.name}</label>`;
+      }
+      const tkey=`${sub}-${ci}-t${ti}`;const topen=state.syllabusOpen[tkey];
+      const sDone=n.subs.reduce((a,s,si)=>a+(state.syllabus[`${sub}-${ci}-${ti}-${si}`]?1:0),0);
+      const subsHtml=n.subs.map((s,si)=>{const key=`${sub}-${ci}-${ti}-${si}`;const d=state.syllabus[key];return `<label class="subtopic ${d?'done':''}" style="display:flex;align-items:center;gap:10px;cursor:pointer"><input type="checkbox" class="checkbox" ${d?'checked':''} onchange="toggleSyllabus('${key}')">${s}</label>`;}).join('');
+      return `<div style="border-left:2px solid var(--border);margin-left:8px;margin-top:4px"><div onclick="toggleSyllabusChapter('${tkey}')" style="cursor:pointer;display:flex;align-items:center;gap:8px;padding:8px 0 8px 14px"><span style="display:inline-block;font-size:10px;color:var(--text-muted);transform:rotate(${topen?90:0}deg);transition:transform .2s">▶</span><span class="text-sm font-med" style="flex:1">${n.name}</span><span class="text-xs text-muted" style="white-space:nowrap">${sDone}/${n.subs.length}</span></div><div style="display:${topen?'block':'none'};padding-left:30px">${subsHtml}</div></div>`;
+    }).join('');
+    return `<div class="card mb-2" style="padding:0;overflow:hidden"><div onclick="toggleSyllabusChapter('${okey}')" style="cursor:pointer;padding:14px 16px;display:flex;align-items:center;gap:12px"><span style="display:inline-block;font-size:11px;color:var(--text-muted);transform:rotate(${open?90:0}deg);transition:transform .2s">▶</span><div style="flex:1;min-width:0"><div class="font-semi text-sm">${ch.name}</div><div class="progress-bar mt-1" style="height:5px"><div class="progress-fill" style="width:${cPct}%"></div></div></div><span class="text-xs text-muted" style="white-space:nowrap">${cDone}/${cTotal}</span></div><div style="display:${open?'block':'none'};padding:0 16px 12px 42px">${topicsHtml}</div></div>`;
   }).join('');
   return `${head}${body}`;
 }
