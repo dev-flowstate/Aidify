@@ -734,6 +734,7 @@ function toggleSidebar(){state.sidebarCollapsed=!state.sidebarCollapsed;const a=
 function resetUserState(name){
   state.user={name:name||'Student',username:(name||'student').toLowerCase().replace(/\s+/g,'_'),stars:0,streak:0,papersCompleted:0,subjects:['math','physics','cs'],progress:{math:0,physics:0,cs:0}};
   state.trackerPapers={};state.syllabus={};state.syllabusOpen={};state.likes={};
+  updateStreak();
 }
 async function loadUserScores(){
   const {data,error}=await window.supabase.from('scores').select('paper_code,score');
@@ -981,6 +982,19 @@ function loadStudy(){try{const rh=localStorage.getItem('aidify_resetHour');if(rh
 function addStudyMs(ms){const cur=studyDayKey();if(state.studyDayKey!==cur){state.studyTotalMs=0;state.studyDayKey=cur}state.studyTotalMs+=ms;saveStudy()}
 function setResetHour(h){h=parseInt(h);if(!(h>=0&&h<=23))h=4;state.resetHour=h;state.studyDayKey=studyDayKey();try{localStorage.setItem('aidify_resetHour',String(h))}catch(e){}saveStudy();render()}
 function dayStartMs(){const h=state.resetHour||0;const now=Date.now();const d=new Date();d.setHours(h,0,0,0);if(d.getTime()>now)d.setDate(d.getDate()-1);return d.getTime()}
+// ---- Daily login streak (localStorage; same reset-hour boundary as study total) ----
+function streakDayKey(ms){const h=state.resetHour||0;const d=new Date(ms-h*3600000);return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`}
+function updateStreak(){
+  const today=streakDayKey(Date.now());
+  const yest=streakDayKey(Date.now()-86400000);
+  let streak=0,lastDay='';
+  try{streak=parseInt(localStorage.getItem('aidify_streak')||'0',10)||0;lastDay=localStorage.getItem('aidify_streak_day')||''}catch(e){}
+  if(lastDay===today){/* already counted today, no change */}
+  else if(lastDay===yest){streak=streak+1}
+  else{streak=1}
+  try{localStorage.setItem('aidify_streak',String(streak));localStorage.setItem('aidify_streak_day',today)}catch(e){}
+  state.user.streak=streak;
+}
 function timerAddToTotal(){const t=state.timer;const now=Date.now();let elapsed=t.base+(t.running?now-t.startedAt:0);if(t.mode==='countdown')elapsed=Math.min(elapsed,t.setMs);if(elapsed<1000){toast('Nothing to add yet');return}const sessionStart=now-elapsed;const portion=Math.max(0,now-Math.max(sessionStart,dayStartMs()));t.running=false;t.base=0;clearInterval(_timerInt);_timerInt=null;if(portion<1000){toast('That session was before today\'s reset — nothing added to today');render();return}addStudyMs(portion);const split=portion<elapsed-1000;toast(split?`Added ${fmtStudy(portion)} (only time after ${String(state.resetHour).padStart(2,'0')}:00 counts today)`:`Added ${fmtStudy(portion)} to today's total 📚`);render()}
 function renderTimerWidget(){
   const t=state.timer,running=t.running,mode=t.mode;
