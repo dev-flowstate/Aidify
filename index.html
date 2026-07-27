@@ -967,7 +967,7 @@ function toggleSyllabusChapter(k){if(!state.syllabusOpen)state.syllabusOpen={};s
 let _timerInt=null;
 function fmtTimer(ms){ms=Math.max(0,Math.floor(ms/1000));const h=Math.floor(ms/3600),m=Math.floor(ms%3600/60),s=ms%60,p=n=>String(n).padStart(2,'0');return h>0?`${h}:${p(m)}:${p(s)}`:`${p(m)}:${p(s)}`}
 function timerValue(){const t=state.timer;const live=t.base+(t.running?Date.now()-t.startedAt:0);return t.mode==='countdown'?Math.max(0,t.setMs-live):live}
-function timerRefresh(){const el=document.getElementById('timerDisplay');if(el)el.textContent=fmtTimer(timerValue());if(state.timer.mode==='countdown'&&state.timer.running&&timerValue()<=0){timerPause();toast('⏰ Time\'s up!')}}
+function timerRefresh(){if(ensureStudyDay()){render();return}const el=document.getElementById('timerDisplay');if(el)el.textContent=fmtTimer(timerValue());if(state.timer.mode==='countdown'&&state.timer.running&&timerValue()<=0){timerPause();toast('⏰ Time\'s up!')}}
 function timerStart(){const t=state.timer;if(t.running)return;if(t.mode==='countdown'&&t.setMs-t.base<=0)return;t.running=true;t.startedAt=Date.now();clearInterval(_timerInt);_timerInt=setInterval(timerRefresh,250);render()}
 function timerPause(){const t=state.timer;if(t.running){t.base+=Date.now()-t.startedAt;t.running=false}clearInterval(_timerInt);_timerInt=null;render()}
 function timerReset(){const t=state.timer;t.running=false;t.base=0;clearInterval(_timerInt);_timerInt=null;render()}
@@ -982,6 +982,12 @@ function loadStudy(){try{const rh=localStorage.getItem('aidify_resetHour');if(rh
 function addStudyMs(ms){const cur=studyDayKey();if(state.studyDayKey!==cur){state.studyTotalMs=0;state.studyDayKey=cur}state.studyTotalMs+=ms;saveStudy()}
 function setResetHour(h){h=parseInt(h);if(!(h>=0&&h<=23))h=4;state.resetHour=h;state.studyDayKey=studyDayKey();try{localStorage.setItem('aidify_resetHour',String(h))}catch(e){}saveStudy();render()}
 function dayStartMs(){const h=state.resetHour||0;const now=Date.now();const d=new Date();d.setHours(h,0,0,0);if(d.getTime()>now)d.setDate(d.getDate()-1);return d.getTime()}
+// ---- Persist study-day rollover, timer state, and current page across refreshes ----
+function ensureStudyDay(){const cur=studyDayKey();if(state.studyDayKey!==cur){state.studyTotalMs=0;state.studyDayKey=cur;saveStudy();return true}return false}
+function saveTimer(){try{localStorage.setItem('aidify_timer',JSON.stringify(state.timer))}catch(e){}}
+function loadTimer(){try{const raw=localStorage.getItem('aidify_timer');if(!raw)return;const o=JSON.parse(raw);if(!o||typeof o!=='object')return;state.timer={mode:o.mode==='countdown'?'countdown':'stopwatch',running:!!o.running,base:o.base||0,startedAt:o.startedAt||0,setMs:o.setMs||1500000};if(state.timer.running){clearInterval(_timerInt);_timerInt=setInterval(timerRefresh,250)}}catch(e){}}
+function saveNav(){try{localStorage.setItem('aidify_nav',JSON.stringify({page:state.page,activeSubject:state.activeSubject,subjectTab:state.subjectTab}))}catch(e){}}
+function loadNavInto(){let page='dashboard',as=state.activeSubject,st=state.subjectTab;try{const raw=localStorage.getItem('aidify_nav');if(raw){const o=JSON.parse(raw);const valid=['dashboard','subject','community','profile','settings','topical'];if(o&&valid.indexOf(o.page)>=0)page=o.page;if(o&&o.activeSubject)as=o.activeSubject;if(o&&o.subjectTab)st=o.subjectTab}}catch(e){}state.page=page;state.activeSubject=as;state.subjectTab=st}
 // ---- Daily login streak (localStorage; same reset-hour boundary as study total) ----
 function streakDayKey(ms){const h=state.resetHour||0;const d=new Date(ms-h*3600000);return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`}
 function updateStreak(){
@@ -1020,19 +1026,19 @@ function renderSettings(){
 
 function renderProfile(){return`${renderSidebar()}<div class="main-content"><div class="page-header"><h1 style="font-size:26px;font-weight:800;padding-bottom:20px">My Profile</h1></div><div class="page-body"><div class="profile-header mb-4"><div class="avatar-lg">AK</div><div style="flex:1"><h2 style="font-size:22px;font-weight:800">${state.user.name}</h2><p class="text-muted">@${state.user.username}</p><div class="flex gap-2 mt-2"><span class="badge">⭐ ${totalStars()} stars</span><span class="badge badge-mint">🔥 ${state.user.streak}-day streak</span><span class="badge">📄 ${Object.keys(state.trackerPapers).length} papers</span></div></div><button class="btn btn-secondary">✏ Edit Profile</button></div><div class="grid grid-2 gap-4"><div class="card"><h3 style="font-weight:800;margin-bottom:16px;font-size:16px">My Subscriptions</h3>${state.user.subjects.map(s=>{const sub=SUBJECTS[s];return`<div class="flex items-center justify-between mb-3 pb-3" style="border-bottom:1px solid var(--border)"><div class="flex items-center gap-3">${sub.emoji}<div><div class="font-semi text-sm">${sub.name}</div><div class="text-xs text-muted">${sub.code}</div></div></div><span class="badge badge-mint">Active</span></div>`;}).join('')}<button class="btn btn-ghost btn-sm w-full mt-2" onclick="navigate('pricing')">+ Upgrade to Bundle</button></div><div class="card"><h3 style="font-weight:800;margin-bottom:16px;font-size:16px">Subject Progress</h3>${state.user.subjects.map(s=>{const sub=SUBJECTS[s];const prog=state.user.progress[s]||0;return`<div class="mb-4"><div class="flex justify-between mb-1"><span class="font-med text-sm">${sub.emoji} ${sub.name}</span><span class="text-sm" style="color:var(--sage)">${prog}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${prog}%"></div></div></div>`;}).join('')}</div><div class="card"><h3 style="font-weight:800;margin-bottom:16px;font-size:16px">Stars & Achievements</h3><div class="grid grid-2 gap-3">${[{icon:'⭐',label:'Total Stars',val:totalStars()},{icon:'📄',label:'Papers Done',val:Object.keys(state.trackerPapers).length},{icon:'🔥',label:'Best Streak',val:'12 days'},{icon:'🏆',label:'Rank',val:'#47'}].map(a=>`<div class="stat-card"><span class="num" style="font-size:22px">${a.icon}</span><span class="num" style="font-size:20px">${a.val}</span><div class="lbl">${a.label}</div></div>`).join('')}</div></div><div class="card"><h3 style="font-weight:800;margin-bottom:16px;font-size:16px">Saved Questions</h3><div class="empty-state"><div class="icon">🔖</div><p>No bookmarked questions yet</p><p class="text-xs mt-2">Bookmark questions from the generator to revisit them here</p></div></div></div></div></div>`}
 
-function render(){const app=document.getElementById('app');if(!state.loggedIn){switch(state.page){case 'pricing':app.innerHTML=renderPricing();break;default:app.innerHTML=renderLanding()}}else{switch(state.page){case 'dashboard':app.innerHTML=renderDashboard();break;case 'subject':app.innerHTML=renderSubject();break;case 'community':app.innerHTML=renderCommunityPage(false);break;case 'profile':app.innerHTML=renderProfile();break;case 'settings':app.innerHTML=renderSettings();break;case 'topical':app.innerHTML=renderTopicalPage();break;default:app.innerHTML=renderDashboard()}}document.getElementById('report-fab')?.classList.toggle('hidden',!state.loggedIn);document.getElementById('app').classList.toggle('sb-collapsed',state.sidebarCollapsed);document.getElementById('sbOpen')?.classList.toggle('hidden',!state.sidebarCollapsed)}
+function render(){const app=document.getElementById('app');ensureStudyDay();if(!state.loggedIn){switch(state.page){case 'pricing':app.innerHTML=renderPricing();break;default:app.innerHTML=renderLanding()}}else{switch(state.page){case 'dashboard':app.innerHTML=renderDashboard();break;case 'subject':app.innerHTML=renderSubject();break;case 'community':app.innerHTML=renderCommunityPage(false);break;case 'profile':app.innerHTML=renderProfile();break;case 'settings':app.innerHTML=renderSettings();break;case 'topical':app.innerHTML=renderTopicalPage();break;default:app.innerHTML=renderDashboard()}}document.getElementById('report-fab')?.classList.toggle('hidden',!state.loggedIn);document.getElementById('app').classList.toggle('sb-collapsed',state.sidebarCollapsed);document.getElementById('sbOpen')?.classList.toggle('hidden',!state.sidebarCollapsed);saveNav();saveTimer()}
 
 async function initAuth()
   {while(!window.supabase){await new Promise(r=>setTimeout(r,50))}
   const {data:{session}}=await window.supabase.auth.getSession();
-  if(session){resetUserState(session.user.user_metadata?.full_name||session.user.email);await loadUserScores();await loadTopicalAttempts();state.loggedIn=true;state.page='dashboard'}
+  if(session){resetUserState(session.user.user_metadata?.full_name||session.user.email);await loadUserScores();await loadTopicalAttempts();state.loggedIn=true;loadNavInto()}
   await loadTopicalQuestions();
   render();
   window.supabase.auth.onAuthStateChange((event,session)=>{
     if(event==='SIGNED_OUT'){state.loggedIn=false;render()}
   });
 }
-loadStudy();initAuth();
+loadStudy();loadTimer();initAuth();
 </script>
 </body>
 </html>
