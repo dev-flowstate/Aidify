@@ -434,6 +434,8 @@ img{max-width:100%}
 #app.sb-collapsed .sidebar{transform:translateX(-100%)}
 #app.sb-collapsed .main-content{margin-left:0}
 #sbOpen{position:fixed;top:14px;left:14px;z-index:60;width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;line-height:1;cursor:pointer;background:var(--sage);color:#fff;border:none;box-shadow:var(--shadow)}
+#sbBackdrop{display:none;position:fixed;inset:0;background:rgba(20,30,20,0.45);z-index:45}
+#sbBackdrop.show{display:block}
 .sb-collapse-btn{background:none;border:none;cursor:pointer;font-size:20px;color:var(--text-muted);line-height:1;padding:2px 8px;border-radius:6px}
 .sb-collapse-btn:hover{background:var(--border);color:var(--text)}
 .page-header{padding:32px 40px 24px;border-bottom:1px solid var(--border);background:rgba(249,247,244,0.5)}
@@ -600,7 +602,7 @@ footer{background:rgba(249,247,244,0.95);border-top:1px solid var(--border);padd
   .stats-bar{grid-template-columns:1fr 1fr;gap:16px;padding:24px}
   .section{padding:40px 24px}
   .footer-grid{grid-template-columns:1fr}
-  .sidebar{width:200px;transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}
+  .sidebar{width:82%;max-width:300px}
   .main-content{margin-left:0}.page-body{padding:20px}.page-header{padding:20px}
   .grid-3{grid-template-columns:1fr}.grid-2{grid-template-columns:1fr}
   .section-header h2{font-size:32px}
@@ -613,6 +615,7 @@ footer{background:rgba(249,247,244,0.95);border-top:1px solid var(--border);padd
 <div id="toast"></div>
 <button id="report-fab" class="btn btn-primary hidden" onclick="reportBug()" title="Report a bug">🐞 Report a bug</button>
 <button id="sbOpen" class="hidden" onclick="toggleSidebar()" title="Open menu">☰</button>
+<div id="sbBackdrop" onclick="toggleSidebar()"></div>
 
 <script>
 const state={dark:false,theme:'light',sidebarCollapsed:false,page:'landing',prevPage:null,loggedIn:false,authMode:'login',activeSubject:'math',subjectTab:'papers',genStep:1,genTopics:[],genYears:[],genCount:20,genOrder:'randomized',genResults:false,showAnswers:{},genChapters:[],genPapers:[],genDifficulty:[],genVariants:[],genYearFrom:null,genYearTo:null,genOrderSnapshot:[],topicalView:'all',wrongOpen:true,wrongSubject:'all',topicalQuestions:[],topicalAttempts:{},timer:{mode:'stopwatch',running:false,base:0,startedAt:0,setMs:1500000},resetHour:4,studyTotalMs:0,studyDayKey:'',trackerPapers:{'9709/42/M/J/23':75,'9709/41/M/J/23':68,'9709/42/O/N/22':82,'9709/41/O/N/22':71,'9709/42/M/J/22':64},syllabus:{},syllabusOpen:{},likes:{},bookmarks:{},user:{name:'Ahmed Khan',username:'ahmedkhan',avatar:null,subjects:['math','physics'],stars:247,streak:7,papersCompleted:14,progress:{math:68,physics:45}}};
@@ -813,8 +816,8 @@ const SYLLABUS_CHAPTERS={
   ]
 };
 
-function navigate(page,extra={}){state.prevPage=state.page;Object.assign(state,extra);state.page=page;if(page==='topical'||(page==='subject'&&state.subjectTab==='generator'))snapshotTopical();render();window.scrollTo(0,0)}
-function toggleSidebar(){state.sidebarCollapsed=!state.sidebarCollapsed;const a=document.getElementById('app');if(a)a.classList.toggle('sb-collapsed',state.sidebarCollapsed);const o=document.getElementById('sbOpen');if(o)o.classList.toggle('hidden',!state.sidebarCollapsed)}
+function navigate(page,extra={}){state.prevPage=state.page;Object.assign(state,extra);state.page=page;if(window.matchMedia('(max-width:768px)').matches)state.sidebarCollapsed=true;if(page==='topical'||(page==='subject'&&state.subjectTab==='generator'))snapshotTopical();render();window.scrollTo(0,0)}
+function toggleSidebar(){state.sidebarCollapsed=!state.sidebarCollapsed;const a=document.getElementById('app');if(a)a.classList.toggle('sb-collapsed',state.sidebarCollapsed);const o=document.getElementById('sbOpen');if(o)o.classList.toggle('hidden',!state.sidebarCollapsed);const bd=document.getElementById('sbBackdrop');if(bd)bd.classList.toggle('show',!state.sidebarCollapsed&&window.matchMedia('(max-width:768px)').matches)}
 function resetUserState(name,avatar){
   let av=avatar||null;if(!av){try{av=localStorage.getItem('aidify_avatar')||null}catch(e){}}
   state.user={name:name||'Student',username:(name||'student').toLowerCase().replace(/\s+/g,'_'),avatar:av,stars:0,streak:0,papersCompleted:0,subjects:['math','physics','cs','chem','bio'],progress:{math:0,physics:0,cs:0,chem:0,bio:0}};
@@ -1149,7 +1152,7 @@ async function saveProfile(){
 function renderProfile(){return`${renderSidebar()}<div class="main-content"><div class="page-header"><h1 style="font-size:26px;font-weight:800;padding-bottom:20px">My Profile</h1></div><div class="page-body"><div class="profile-header mb-4"><div style="position:relative;cursor:pointer" onclick="pickAvatar()" title="Change profile photo">${avatarHTML('avatar-lg')}<div style="position:absolute;right:-2px;bottom:-2px;width:30px;height:30px;border-radius:50%;background:var(--sage);border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:14px">📷</div></div><input type="file" id="avatarInput" accept="image/*" onchange="onAvatarPick(event)" style="display:none">
 <div style="flex:1"><h2 style="font-size:22px;font-weight:800">${state.user.name}</h2><p class="text-muted">@${state.user.username}</p><div class="flex gap-2 mt-2"><span class="badge">⭐ ${totalStars()} stars</span><span class="badge badge-mint">🔥 ${state.user.streak}-day streak</span><span class="badge">📄 ${Object.keys(state.trackerPapers).length} papers</span></div></div><button class="btn btn-secondary" onclick="editProfile()">✏ Edit Profile</button></div><div class="grid grid-2 gap-4"><div class="card"><h3 style="font-weight:800;margin-bottom:16px;font-size:16px">My Subscriptions</h3>${state.user.subjects.map(s=>{const sub=SUBJECTS[s];return`<div class="flex items-center justify-between mb-3 pb-3" style="border-bottom:1px solid var(--border)"><div class="flex items-center gap-3">${sub.emoji}<div><div class="font-semi text-sm">${sub.name}</div><div class="text-xs text-muted">${sub.code}</div></div></div><span class="badge badge-mint">Active</span></div>`;}).join('')}<button class="btn btn-ghost btn-sm w-full mt-2" onclick="navigate('pricing')">+ Upgrade to Bundle</button></div><div class="card"><h3 style="font-weight:800;margin-bottom:16px;font-size:16px">Subject Progress</h3>${state.user.subjects.map(s=>{const sub=SUBJECTS[s];const prog=state.user.progress[s]||0;return`<div class="mb-4"><div class="flex justify-between mb-1"><span class="font-med text-sm">${sub.emoji} ${sub.name}</span><span class="text-sm" style="color:var(--sage)">${prog}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${prog}%"></div></div></div>`;}).join('')}</div><div class="card"><h3 style="font-weight:800;margin-bottom:16px;font-size:16px">Stars & Achievements</h3><div class="grid grid-2 gap-3">${[{icon:'⭐',label:'Total Stars',val:totalStars()},{icon:'📄',label:'Papers Done',val:Object.keys(state.trackerPapers).length},{icon:'🔥',label:'Best Streak',val:'12 days'},{icon:'🏆',label:'Rank',val:'#47'}].map(a=>`<div class="stat-card"><span class="num" style="font-size:22px">${a.icon}</span><span class="num" style="font-size:20px">${a.val}</span><div class="lbl">${a.label}</div></div>`).join('')}</div></div><div class="card"><h3 style="font-weight:800;margin-bottom:16px;font-size:16px">Saved Questions</h3><div class="empty-state"><div class="icon">🔖</div><p>No bookmarked questions yet</p><p class="text-xs mt-2">Bookmark questions from the generator to revisit them here</p></div></div></div></div></div>`}
 
-function render(){const app=document.getElementById('app');ensureStudyDay();if(!state.loggedIn){switch(state.page){case 'pricing':app.innerHTML=renderPricing();break;default:app.innerHTML=renderLanding()}}else{switch(state.page){case 'dashboard':app.innerHTML=renderDashboard();break;case 'subject':app.innerHTML=renderSubject();break;case 'community':app.innerHTML=renderCommunityPage(false);break;case 'profile':app.innerHTML=renderProfile();break;case 'settings':app.innerHTML=renderSettings();break;case 'topical':app.innerHTML=renderTopicalPage();break;default:app.innerHTML=renderDashboard()}}document.getElementById('report-fab')?.classList.toggle('hidden',!state.loggedIn);document.getElementById('app').classList.toggle('sb-collapsed',state.sidebarCollapsed);document.getElementById('sbOpen')?.classList.toggle('hidden',!state.sidebarCollapsed);saveNav();saveTimer()}
+function render(){const app=document.getElementById('app');ensureStudyDay();if(!state.loggedIn){switch(state.page){case 'pricing':app.innerHTML=renderPricing();break;default:app.innerHTML=renderLanding()}}else{switch(state.page){case 'dashboard':app.innerHTML=renderDashboard();break;case 'subject':app.innerHTML=renderSubject();break;case 'community':app.innerHTML=renderCommunityPage(false);break;case 'profile':app.innerHTML=renderProfile();break;case 'settings':app.innerHTML=renderSettings();break;case 'topical':app.innerHTML=renderTopicalPage();break;default:app.innerHTML=renderDashboard()}}document.getElementById('report-fab')?.classList.toggle('hidden',!state.loggedIn);document.getElementById('app').classList.toggle('sb-collapsed',state.sidebarCollapsed);document.getElementById('sbOpen')?.classList.toggle('hidden',!state.sidebarCollapsed);document.getElementById('sbBackdrop')?.classList.toggle('show',state.loggedIn&&!state.sidebarCollapsed&&window.matchMedia('(max-width:768px)').matches);saveNav();saveTimer()}
 
 async function initAuth()
   {while(!window.supabase){await new Promise(r=>setTimeout(r,50))}
@@ -1161,7 +1164,7 @@ async function initAuth()
     if(event==='SIGNED_OUT'){state.loggedIn=false;render()}
   });
 }
-loadStudy();loadTimer();initAuth();
+loadStudy();loadTimer();if(window.matchMedia('(max-width:768px)').matches)state.sidebarCollapsed=true;initAuth();
 </script>
 </body>
 </html>
