@@ -615,7 +615,7 @@ footer{background:rgba(249,247,244,0.95);border-top:1px solid var(--border);padd
 <button id="sbOpen" class="hidden" onclick="toggleSidebar()" title="Open menu">☰</button>
 
 <script>
-const state={dark:false,theme:'light',sidebarCollapsed:false,page:'landing',prevPage:null,loggedIn:false,authMode:'login',activeSubject:'math',subjectTab:'papers',genStep:1,genTopics:[],genYears:[],genCount:20,genOrder:'randomized',genResults:false,showAnswers:{},genChapters:[],genPapers:[],genDifficulty:[],topicalView:'all',wrongOpen:true,wrongSubject:'all',topicalQuestions:[],topicalAttempts:{},timer:{mode:'stopwatch',running:false,base:0,startedAt:0,setMs:1500000},resetHour:4,studyTotalMs:0,studyDayKey:'',trackerPapers:{'9709/42/M/J/23':75,'9709/41/M/J/23':68,'9709/42/O/N/22':82,'9709/41/O/N/22':71,'9709/42/M/J/22':64},syllabus:{},syllabusOpen:{},likes:{},bookmarks:{},user:{name:'Ahmed Khan',username:'ahmedkhan',avatar:null,subjects:['math','physics'],stars:247,streak:7,papersCompleted:14,progress:{math:68,physics:45}}};
+const state={dark:false,theme:'light',sidebarCollapsed:false,page:'landing',prevPage:null,loggedIn:false,authMode:'login',activeSubject:'math',subjectTab:'papers',genStep:1,genTopics:[],genYears:[],genCount:20,genOrder:'randomized',genResults:false,showAnswers:{},genChapters:[],genPapers:[],genDifficulty:[],genVariants:[],genYearFrom:null,genYearTo:null,genOrderSnapshot:[],topicalView:'all',wrongOpen:true,wrongSubject:'all',topicalQuestions:[],topicalAttempts:{},timer:{mode:'stopwatch',running:false,base:0,startedAt:0,setMs:1500000},resetHour:4,studyTotalMs:0,studyDayKey:'',trackerPapers:{'9709/42/M/J/23':75,'9709/41/M/J/23':68,'9709/42/O/N/22':82,'9709/41/O/N/22':71,'9709/42/M/J/22':64},syllabus:{},syllabusOpen:{},likes:{},bookmarks:{},user:{name:'Ahmed Khan',username:'ahmedkhan',avatar:null,subjects:['math','physics'],stars:247,streak:7,papersCompleted:14,progress:{math:68,physics:45}}};
 
 function toggleDark(){state.dark=!state.dark;document.documentElement.classList.toggle('dark',state.dark);document.querySelectorAll('#dm-toggle').forEach(b=>{b.textContent=state.dark?'☀️ Light':'🌊 Dark'});}
 
@@ -813,7 +813,7 @@ const SYLLABUS_CHAPTERS={
   ]
 };
 
-function navigate(page,extra={}){state.prevPage=state.page;Object.assign(state,extra);state.page=page;render();window.scrollTo(0,0)}
+function navigate(page,extra={}){state.prevPage=state.page;Object.assign(state,extra);state.page=page;if(page==='topical'||(page==='subject'&&state.subjectTab==='generator'))snapshotTopical();render();window.scrollTo(0,0)}
 function toggleSidebar(){state.sidebarCollapsed=!state.sidebarCollapsed;const a=document.getElementById('app');if(a)a.classList.toggle('sb-collapsed',state.sidebarCollapsed);const o=document.getElementById('sbOpen');if(o)o.classList.toggle('hidden',!state.sidebarCollapsed)}
 function resetUserState(name,avatar){
   let av=avatar||null;if(!av){try{av=localStorage.getItem('aidify_avatar')||null}catch(e){}}
@@ -836,7 +836,7 @@ function paperExternalUrl(p,type){const sub=SUBJECTS[p.subject];const slug=`${su
 function correctTopicalCount(subject){const ids=Object.keys(state.topicalAttempts).filter(id=>state.topicalAttempts[id]&&state.topicalAttempts[id].correct===true);if(!subject)return ids.length;return ids.filter(id=>{const q=state.topicalQuestions.find(x=>String(x.id)===String(id));return q&&q.subject===subject}).length}
 function totalStars(){return Object.keys(state.trackerPapers).length*10+correctTopicalCount()}
 function subjectStars(s){return Object.keys(state.trackerPapers).filter(c=>{const p=PAST_PAPERS.find(x=>x.code===c);return p&&p.subject===s}).length*10+correctTopicalCount(s)}
-async function loadTopicalQuestions(){const {data,error}=await window.supabase.from('topical_questions').select('*');if(error){console.error('Load topical questions failed:',error);return}state.topicalQuestions=data||[]}
+async function loadTopicalQuestions(){const {data,error}=await window.supabase.from('topical_questions').select('*');if(error){console.error('Load topical questions failed:',error);return}state.topicalQuestions=data||[];snapshotTopical()}
 async function loadTopicalAttempts(){const {data,error}=await window.supabase.from('topical_attempts').select('question_id,correct,attempts,updated_at');if(error){console.error('Load topical attempts failed:',error);return}state.topicalAttempts={};(data||[]).forEach(r=>{state.topicalAttempts[r.question_id]={correct:r.correct,attempts:r.attempts||1,updated_at:r.updated_at}})}
 function toast(msg,duration=2500){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),duration)}
 function closeModal(){document.getElementById('modal').classList.add('hidden');document.getElementById('modal').innerHTML=''  }
@@ -936,20 +936,28 @@ function reportBug(){const modal=document.getElementById('modal');modal.classLis
 
 async function submitReport(){const el=document.getElementById('bugInput');const message=el.value.trim();if(!message){toast('Please describe the bug first');return}const page=state.page==='subject'?`subject:${state.activeSubject}/${state.subjectTab}`:state.page;const {data:{user}}=await window.supabase.auth.getUser();const {error}=await window.supabase.from('bug_reports').insert({message,page,email:user?.email||null,user_agent:navigator.userAgent});if(error){toast('Could not send report: '+error.message);return}closeModal();toast('Thanks! Your report was sent 🐞')}
 
+function qVariantCode(q){const m=(q.question_image||'').match(/_p(\d)(\d)_/i);return m?m[1]+m[2]:null}
+function topicalFilter(qs,skip){skip=skip||{};return qs.filter(q=>{if(!skip.chapter&&state.genChapters.length&&!state.genChapters.includes(q.chapter))return false;if(!skip.paper&&state.genPapers.length&&!state.genPapers.includes(q.paper))return false;if(!skip.variant&&state.genVariants&&state.genVariants.length&&!state.genVariants.includes(qVariantCode(q)))return false;if(!skip.year&&(state.genYearFrom||state.genYearTo)){const y=+q.year;if(state.genYearFrom&&y<state.genYearFrom)return false;if(state.genYearTo&&y>state.genYearTo)return false}if(!skip.diff&&state.genDifficulty.length&&!state.genDifficulty.includes(q.difficulty))return false;return true})}
+function toggleVariant(code){if(!state.genVariants)state.genVariants=[];const i=state.genVariants.indexOf(code);if(i>=0)state.genVariants.splice(i,1);else state.genVariants.push(code);render()}
+function setYearFrom(v){state.genYearFrom=v?+v:null;render()}
+function setYearTo(v){state.genYearTo=v?+v:null;render()}
+function snapshotTopical(){const subj=state.activeSubject;const qs=state.topicalQuestions.filter(q=>q.subject===subj);const un=[],at=[];qs.forEach(q=>{(state.topicalAttempts[q.id]?at:un).push(String(q.id))});state.genOrderSnapshot=un.concat(at)}
 function renderGeneratorTab(){
+  if(!state.genVariants)state.genVariants=[];
   const all=state.topicalQuestions.filter(q=>q.subject===state.activeSubject);
   const chapters=[...new Set(all.map(q=>q.chapter).filter(Boolean))].sort();
-  const years=[...new Set(all.map(q=>q.year).filter(Boolean))].sort((a,b)=>b-a);
+  const years=[...new Set(all.map(q=>+q.year).filter(v=>v))].sort((a,b)=>a-b);
   const papers=[...new Set(all.map(q=>q.paper).filter(v=>v!=null&&v!==''))].sort((a,b)=>a-b);
   const diffs=['Easy','Medium','Hard'];
-  let list=all;
-  if(state.genChapters.length)list=list.filter(q=>state.genChapters.includes(q.chapter));
-  if(state.genPapers.length)list=list.filter(q=>state.genPapers.includes(q.paper));
-  if(state.genYears.length)list=list.filter(q=>state.genYears.includes(q.year));
-  if(state.genDifficulty.length)list=list.filter(q=>state.genDifficulty.includes(q.difficulty));
+  const chapBase=topicalFilter(all,{chapter:true});const chapCounts={};chapBase.forEach(q=>{if(q.chapter)chapCounts[q.chapter]=(chapCounts[q.chapter]||0)+1});
+  const variants=[...new Set(topicalFilter(all,{variant:true}).map(qVariantCode).filter(Boolean))].sort();
+  let list=topicalFilter(all);
+  if(state.genOrderSnapshot&&state.genOrderSnapshot.length){const snap=state.genOrderSnapshot,ix=id=>{const i=snap.indexOf(String(id));return i<0?1e9:i};list=[...list].sort((a,b)=>ix(a.id)-ix(b.id))}
+  const attemptedCount=list.filter(q=>state.topicalAttempts[q.id]).length;
+  const yearOpt=sel=>`<option value="">Any</option>`+years.map(y=>`<option value="${y}" ${String(sel)==String(y)?'selected':''}>${y}</option>`).join('');
   const chip=(label,sel,onclick)=>`<div class="topic-chip ${sel?'selected':''}" onclick="${onclick}">${label}</div>`;
   const esc=s=>String(s).replace(/'/g,"\\'");
-  const filters=`<div class="card mb-4"><div class="mb-3"><h2 style="font-size:18px;font-weight:800">All Questions (${all.length})</h2><p class="text-sm text-muted">Practise past-paper questions by topic · ⭐ 1 star per correct answer</p></div><label class="label">Chapter</label><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${chapters.length?chapters.map(c=>chip(c,state.genChapters.includes(c),`toggleChapter('${esc(c)}')`)).join(''):'<span class="text-xs text-muted">No chapters yet</span>'}</div><label class="label">Paper</label><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${papers.length?papers.map(p=>chip(`Paper ${p}`,state.genPapers.includes(p),`togglePaper(${p})`)).join(''):'<span class="text-xs text-muted">No papers yet</span>'}</div><label class="label">Year</label><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${years.length?years.map(y=>chip(y,state.genYears.includes(y),`toggleYear(${y})`)).join(''):'<span class="text-xs text-muted">—</span>'}</div><label class="label">Difficulty</label><div style="display:flex;flex-wrap:wrap;gap:4px">${diffs.map(d=>chip(d,state.genDifficulty.includes(d),`toggleDifficulty('${d}')`)).join('')}</div></div>`;
+  const filters=`<div class="card mb-4"><div class="mb-3"><h2 style="font-size:18px;font-weight:800">All Questions (${all.length})</h2><p class="text-sm text-muted">Showing ${list.length}${attemptedCount?` · ${attemptedCount} done (moved to the end)`:''} · ⭐ 1 star per correct answer</p></div><label class="label">Chapter</label><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${chapters.length?chapters.map(c=>chip(`${c} (${chapCounts[c]||0})`,state.genChapters.includes(c),`toggleChapter('${esc(c)}')`)).join(''):'<span class="text-xs text-muted">No chapters yet</span>'}</div><label class="label">Paper</label><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${papers.length?papers.map(p=>chip(`Paper ${p}`,state.genPapers.includes(p),`togglePaper(${p})`)).join(''):'<span class="text-xs text-muted">No papers yet</span>'}</div>${variants.length?`<label class="label">Variant</label><div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">${variants.map(v=>chip(v,state.genVariants.includes(v),`toggleVariant('${v}')`)).join('')}</div>`:''}<label class="label">Years</label><div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px"><span class="text-xs text-muted">From</span><select class="input" style="width:auto;display:inline-block" onchange="setYearFrom(this.value)">${yearOpt(state.genYearFrom)}</select><span class="text-xs text-muted">To</span><select class="input" style="width:auto;display:inline-block" onchange="setYearTo(this.value)">${yearOpt(state.genYearTo)}</select></div><label class="label">Difficulty</label><div style="display:flex;flex-wrap:wrap;gap:4px">${diffs.map(d=>chip(d,state.genDifficulty.includes(d),`toggleDifficulty('${d}')`)).join('')}</div></div>`;
   if(all.length===0)return `${filters}<div class="empty-state"><div class="icon">🎯</div><p>No topical questions yet</p><p class="text-xs mt-2">Add questions to your Supabase <b>topical_questions</b> table and they'll show up here automatically.</p></div>`;
   const body=list.length===0?`<div class="empty-state"><div class="icon">🔍</div><p>No questions match your filters</p></div>`:list.map(renderQuestionCard).join('');
   return `${filters}${body}`;
