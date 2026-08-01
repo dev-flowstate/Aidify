@@ -1230,6 +1230,13 @@ function renderCommunityTab(){return renderCommunityPage(true)}
 function escapeHtml(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 async function loadCommunityPosts(){try{const {data,error}=await window.supabase.from('community_posts').select('*').order('created_at',{ascending:false});if(error){console.error('Load community failed:',error);return}state.communityPosts=data||[]}catch(e){}}
 function setCommunitySubject(k){state.communitySubject=k;render()}
+/* ===== Profanity filter (Roblox-style): warn on post + mask the word everywhere =====
+   Whole-word, case-insensitive. NOTE: 'sex'/'sexual' are deliberately NOT here — they're
+   real Biology syllabus terms (sex cells, sex-linked). Edit BAD_WORDS to add/remove. */
+const BAD_WORDS=['fuck','fuk','fuckin','fucking','fucked','fucker','fuckface','fuckboy','motherfucker','shit','shitty','bullshit','bitch','bitches','bastard','asshole','asshat','ass','arse','dumbass','jackass','dick','dickhead','cock','pussy','cunt','whore','slut','nigger','nigga','faggot','fag','retard','retarded','wanker','twat','bollocks','prick','dumbfuck'];
+const BAD_RE=new RegExp('\\b('+BAD_WORDS.map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b','gi');
+function censorText(text){if(text==null)return {clean:'',found:false};let found=false;const clean=String(text).replace(BAD_RE,m=>{found=true;return '*'.repeat(m.length)});return {clean,found};}
+function cw(text){return censorText(text).clean}
 function renderPostCard(p){
   const initials=(((p.author_name||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join(''))||'U').toUpperCase();
   const subjName=SUBJECTS[p.subject]?SUBJECTS[p.subject].name:(p.subject||'');
@@ -1238,7 +1245,7 @@ function renderPostCard(p){
   if(p.tag_type==='paper'&&p.tag_ref){tagHtml=`<a href="${paperExternalUrl(p.tag_ref)}" target="_blank" rel="noopener" style="${tagStyle}">📄 ${escapeHtml(p.tag_label||p.tag_ref)}</a>`}
   else if(p.tag_type==='question'&&p.tag_ref){const q=(state.topicalQuestions||[]).find(x=>String(x.id)===String(p.tag_ref));tagHtml=`<div style="${tagStyle};cursor:default">🎯 ${escapeHtml(p.tag_label||'Topical question')}</div>${q&&q.question_image?`<img src="${q.question_image}" alt="Question" class="topical-img" style="margin-top:8px" onclick="window.open('${q.question_image}','_blank')" />`:''}`}
   const canDelete=p.user_id&&state.userId&&p.user_id===state.userId;
-  return `<div class="post-card"><div class="flex gap-2 mb-2 items-start"><div class="avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0">${initials}</div><div style="flex:1;min-width:0"><div class="user-mini mb-1">${escapeHtml(p.author_name||'Student')} · <span class="badge">${escapeHtml(subjName)}</span> · ${timeAgo(p.created_at)}</div><h3 style="font-size:15px;font-weight:700;margin-bottom:6px">${escapeHtml(p.title)}</h3>${p.body?`<p class="text-sm text-muted mb-2" style="white-space:pre-wrap">${escapeHtml(p.body)}</p>`:''}${tagHtml?`<div class="mb-1">${tagHtml}</div>`:''}${canDelete?`<button class="btn btn-ghost btn-sm mt-2" onclick="deletePost(${p.id})">🗑 Delete</button>`:''}</div></div></div>`;
+  return `<div class="post-card"><div class="flex gap-2 mb-2 items-start"><div class="avatar" style="width:32px;height:32px;font-size:12px;flex-shrink:0">${initials}</div><div style="flex:1;min-width:0"><div class="user-mini mb-1">${escapeHtml(cw(p.author_name||'Student'))} · <span class="badge">${escapeHtml(subjName)}</span> · ${timeAgo(p.created_at)}</div><h3 style="font-size:15px;font-weight:700;margin-bottom:6px">${escapeHtml(cw(p.title))}</h3>${p.body?`<p class="text-sm text-muted mb-2" style="white-space:pre-wrap">${escapeHtml(cw(p.body))}</p>`:''}${tagHtml?`<div class="mb-1">${tagHtml}</div>`:''}${canDelete?`<button class="btn btn-ghost btn-sm mt-2" onclick="deletePost(${p.id})">🗑 Delete</button>`:''}</div></div></div>`;
 }
 function renderCommunityPage(embedded=false){
   const subs=[['all','All']].concat(state.user.subjects.map(s=>[s,SUBJECTS[s].short||SUBJECTS[s].name]));
@@ -1268,8 +1275,9 @@ async function submitNewPost(){
   let tag_type=null,tag_ref=null,tag_label=null;
   if(d.tagType==='paper'&&d.tagRef){const p=PAST_PAPERS.find(x=>x.code===d.tagRef);tag_type='paper';tag_ref=d.tagRef;tag_label=p?`${p.code} · ${p.season} ${p.year}`:d.tagRef}
   else if(d.tagType==='question'&&d.tagRef){const q=(state.topicalQuestions||[]).find(x=>String(x.id)===String(d.tagRef));tag_type='question';tag_ref=String(d.tagRef);tag_label=q?`${q.chapter||'?'} · ${q.year||''} (Paper ${q.paper||'?'})`:'Topical question'}
+  const ct=censorText(d.title.trim());const cb=censorText((d.body||'').trim());const flagged=ct.found||cb.found;
   if(msg){msg.style.color='var(--text-muted)';msg.textContent='Posting...'}if(btn)btn.disabled=true;
-  try{const {error}=await window.supabase.from('community_posts').insert({subject:d.subject,author_name:state.user.name,title:d.title.trim(),body:(d.body||'').trim(),tag_type,tag_ref,tag_label});if(error)return fail('Error: '+error.message);await loadCommunityPosts();closeModal();state.communitySubject='all';render();toast('Posted ✓')}catch(e){fail('Something went wrong')}
+  try{const {error}=await window.supabase.from('community_posts').insert({subject:d.subject,author_name:cw(state.user.name),title:ct.clean,body:cb.clean,tag_type,tag_ref,tag_label});if(error)return fail('Error: '+error.message);await loadCommunityPosts();closeModal();state.communitySubject='all';render();toast(flagged?'⚠️ Posted — we filtered some words to keep it clean':'Posted ✓',flagged?4000:2500)}catch(e){fail('Something went wrong')}
 }
 async function deletePost(id){if(!confirm('Delete this post?'))return;const {error}=await window.supabase.from('community_posts').delete().eq('id',id);if(error){toast('Could not delete: '+error.message);return}await loadCommunityPosts();render();toast('Post deleted')}
 
