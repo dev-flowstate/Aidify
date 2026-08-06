@@ -876,7 +876,7 @@ const THRESHOLDS={
   cs:{as:{max:150,grades:{a:93,b:81,c:69,d:57,e:45}},al:{max:300,grades:{'A*':237,A:210,B:183,C:156,D:129,E:102}}}
 };
 function loadGoals(){try{const raw=localStorage.getItem('aidify_goals');if(raw){const o=JSON.parse(raw);if(o&&typeof o==='object')state.goals={year:o.year||null,subjects:o.subjects||{}}}}catch(e){}}
-function saveGoals(){try{localStorage.setItem('aidify_goals',JSON.stringify(state.goals))}catch(e){}}
+function saveGoals(){try{localStorage.setItem('aidify_goals',JSON.stringify(state.goals))}catch(e){}queueProgressSave()}
 function subjectGoal(subject){const g=state.goals;const th=THRESHOLDS[subject];if(!g||!g.year||!th)return null;const sg=(g.subjects||{})[subject];if(!sg||!sg.target)return null;if(g.year==='AS'){const need=th.as.grades[sg.target];if(need==null)return null;return{year:'AS',target:sg.target,need,max:th.as.max};}const alNeed=th.al.grades[sg.target];if(alNeed==null)return null;const known=sg.knowMark&&sg.asMark!=null&&sg.asMark!=='';const asMark=known?Math.max(0,Math.min(th.as.max,Number(sg.asMark))):(th.as.grades[sg.asGrade]!=null?th.as.grades[sg.asGrade]:0);const a2Max=th.al.max-th.as.max;let remaining=alNeed-asMark;if(remaining<0)remaining=0;const overCap=remaining>a2Max;return{year:'A2',target:sg.target,alNeed,asMark,a2Max,remaining:Math.min(remaining,a2Max),overCap,knownMark:known,asGrade:sg.asGrade,asMax:th.as.max};}
 function goalSummaryLine(){if(!state.goals.year)return 'Not set yet — pick your stage and target grades.';const parts=(state.user.subjects||[]).map(s=>{const sg=(state.goals.subjects||{})[s];if(!sg||!sg.target)return null;const nm=SUBJECTS[s]?(SUBJECTS[s].short||SUBJECTS[s].name):s;return `${nm} ${sg.target}`;}).filter(Boolean);return `${state.goals.year} · ${parts.join(' · ')||'no targets yet'}`;}
 function openGoalSetup(){const d={year:state.goals.year||'AS',subjects:{}};(state.user.subjects||[]).forEach(s=>{const ex=(state.goals.subjects||{})[s]||{};const set=GRADE_SETS[d.year];let t=ex.target;if(!set.includes(t))t=(d.year==='AS'?'a':'A');d.subjects[s]={target:t,knowMark:!!ex.knowMark,asMark:(ex.asMark!=null?ex.asMark:''),asGrade:ex.asGrade||'a'};});state.goalDraft=d;const modal=document.getElementById('modal');modal.classList.remove('hidden');modal.innerHTML=renderGoalSetupModal();modal.onclick=(e)=>{if(e.target===modal)closeModal()};}
@@ -926,7 +926,7 @@ async function doLogin(){
   const {error}=await window.supabase.auth.signInWithPassword({email,password});
   if(error){toast('Login failed: '+error.message);return}
   const {data:{user}}=await window.supabase.auth.getUser();
-  resetUserState(user?.user_metadata?.full_name||user?.email||'Student',user?.user_metadata?.avatar);state.userId=user?.id||null;await loadUserScores();await loadTopicalQuestions();await loadTopicalAttempts();await loadProfile();await loadCommunityPosts();await refreshRank();
+  resetUserState(user?.user_metadata?.full_name||user?.email||'Student',user?.user_metadata?.avatar);state.userId=user?.id||null;await loadUserScores();await loadTopicalQuestions();await loadTopicalAttempts();await loadProfile();await loadCommunityPosts();await refreshRank();await loadProgress();
   state.loggedIn=true;closeModal();navigate('dashboard');toast('Welcome back! 👋')
 }
 async function doSignup(){
@@ -936,7 +936,7 @@ async function doSignup(){
   const {error}=await window.supabase.auth.signUp({email,password,options:{data:{full_name:name}}});
   if(error){toast('Signup failed: '+error.message);return}
   resetUserState(name);const {data:{user:su}}=await window.supabase.auth.getUser();state.userId=su?.id||null;await loadUserScores();await loadTopicalQuestions();await loadTopicalAttempts();
-  try{const {data:sc}=await window.supabase.rpc('bump_students');if(sc!=null)state.studentCount=Number(sc)}catch(e){}await refreshRank();
+  try{const {data:sc}=await window.supabase.rpc('bump_students');if(sc!=null)state.studentCount=Number(sc)}catch(e){}await refreshRank();await loadProgress();
   state.loggedIn=true;closeModal();navigate('dashboard');toast('Account created! Welcome to Easify 🎉');openGoalSetup()
 }
 async function logout(){
@@ -1062,6 +1062,20 @@ function renderResourcesTab(){const sub=SUBJECTS[state.activeSubject];const topi
 
 function renderHardestTab(){return`<div class="flex justify-between items-center mb-4"><div><h2 style="font-size:18px;font-weight:800">20 Hardest Questions</h2><p class="text-sm text-muted">Curated by our team — the most challenging questions</p></div></div>${HARDEST.map((q,i)=>`<div class="card mb-3"><div class="flex items-start justify-between mb-3"><div class="flex items-center gap-3"><div style="width:32px;height:32px;background:rgba(255,107,107,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#FF6B6B">${i+1}</div><div><div class="font-semi text-sm">${q.desc}</div><div class="text-xs text-muted">${q.paper} · ${q.year} · ${q.topic}</div></div></div><span class="badge ${q.difficulty==='Very Hard'?'badge-mint':''}" style="background:${q.difficulty==='Very Hard'?'rgba(95,179,160,0.15)':'rgba(244,217,168,0.2)'};color:${q.difficulty==='Very Hard'?'var(--mint-accent)':'#C99A48'}">${q.difficulty}</span></div><div class="q-img" style="height:120px">📐 Question image — ${q.year} ${q.paper}</div><div class="flex gap-2"><button class="btn btn-sm btn-ghost" onclick="toast('Showing answer...')">▼ Show Answer</button><button class="btn btn-sm btn-secondary" onclick="toast('Opening YouTube...')">▶ Watch Explanation</button></div></div>`).join('')}`}
 
+function seasonRank(s){return s==='Feb/Mar'?0:s==='May/June'?1:s==='Oct/Nov'?2:1}
+function renderScoreChart(entries){
+  const pts=entries.map(([code,score])=>{const p=PAST_PAPERS.find(x=>x.code===code);const pct=p?Math.round(score/p.maxMarks*100):0;return {code,pct,year:p?p.year:0,season:p?p.season:''}}).sort((a,b)=>a.year-b.year||seasonRank(a.season)-seasonRank(b.season));
+  if(pts.length<2)return '';
+  const W=340,H=170,padL=26,padR=12,padT=12,padB=24,iw=W-padL-padR,ih=H-padT-padB,n=pts.length;
+  const x=i=>padL+iw*i/(n-1),y=v=>padT+ih*(1-v/100);
+  const band=p=>p>=80?'var(--sage)':p>=50?'#7fb3d5':'#e8b4a0';
+  const grid=[0,50,100].map(v=>`<line x1="${padL}" y1="${y(v).toFixed(1)}" x2="${W-padR}" y2="${y(v).toFixed(1)}" stroke="var(--border)" stroke-width="1" opacity="0.6"/><text x="${padL-5}" y="${(y(v)+3).toFixed(1)}" text-anchor="end" font-size="8" fill="var(--text-muted)">${v}</text>`).join('');
+  const line=`<polyline points="${pts.map((p,i)=>`${x(i).toFixed(1)},${y(p.pct).toFixed(1)}`).join(' ')}" fill="none" stroke="var(--sage)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  const dots=pts.map((p,i)=>`<circle cx="${x(i).toFixed(1)}" cy="${y(p.pct).toFixed(1)}" r="3.5" fill="${band(p.pct)}"><title>${p.code} · ${p.pct}%</title></circle>`).join('');
+  const step=Math.max(1,Math.ceil(n/6));const xl=pts.map((p,i)=>(i%step===0||i===n-1)?`<text x="${x(i).toFixed(1)}" y="${H-7}" text-anchor="middle" font-size="7.5" fill="var(--text-muted)">'${String(p.year).slice(-2)}</text>`:'').join('');
+  const first=pts[0].pct,last=pts[n-1].pct,diff=last-first;const trend=diff>0?`<span style="color:var(--sage)">▲ up ${diff}%</span>`:diff<0?`<span style="color:#e8967a">▼ down ${-diff}%</span>`:`<span class="text-muted">flat</span>`;
+  return `<div class="card mb-4"><div class="flex justify-between items-center mb-1" style="flex-wrap:wrap;gap:6px"><h3 style="font-weight:800;font-size:16px">📈 Progress over time</h3><span class="text-xs">${trend} since first logged</span></div><p class="text-xs text-muted mb-2">Your scores in date order — earliest to latest.</p><svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto;overflow:visible">${grid}${line}${dots}${xl}</svg></div>`;
+}
 function renderTrackerTab(){
   if(!state.trackerFilter)state.trackerFilter='all';
   const subjectPapers=PAST_PAPERS.filter(p=>p.subject===state.activeSubject);
@@ -1095,7 +1109,7 @@ function renderTrackerTab(){
     const pct=p?Math.round(score/p.maxMarks*100):0;
     return `<div class="mb-4"><div class="flex justify-between mb-1"><span class="font-med text-sm">${code}${p?` · ${p.name}`:''}</span><span class="text-sm font-semi" style="color:${color(pct)}">${score}/${p?p.maxMarks:'?'} · ${pct}%</span></div><div class="progress-bar"><div class="progress-fill" style="width:${pct}%;background:${color(pct)}"></div></div></div>`;
   }).join('');
-  return `${header}<div class="grid grid-2 gap-3 mb-4">${stats}</div><div class="card"><h3 style="font-weight:800;margin-bottom:16px;font-size:16px">Score Breakdown</h3>${breakdown}</div>`;
+  return `${header}<div class="grid grid-2 gap-3 mb-4">${stats}</div>${renderScoreChart(filteredPapers)}<div class="card"><h3 style="font-weight:800;margin-bottom:16px;font-size:16px">Score Breakdown</h3>${breakdown}</div>`;
 }
 function setTrackerFilterAll(){state.trackerFilter='all';render()}
 function toggleTrackerFilter(n){
@@ -1154,13 +1168,18 @@ function timerSetCustom(){const hEl=document.getElementById('timerH'),mEl=docume
 // ---- Daily study total (persisted in localStorage; resets at state.resetHour, default 4am) ----
 function fmtStudy(ms){const total=Math.floor(ms/60000);const h=Math.floor(total/60),m=total%60;return h>0?`${h}h ${m}m`:`${m}m`}
 function studyDayKey(){const h=state.resetHour||0;const d=new Date(Date.now()-h*3600000);return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`}
-function saveStudy(){try{localStorage.setItem('aidify_study',JSON.stringify({dayKey:state.studyDayKey,totalMs:state.studyTotalMs}))}catch(e){}}
+function saveStudy(){try{localStorage.setItem('aidify_study',JSON.stringify({dayKey:state.studyDayKey,totalMs:state.studyTotalMs}))}catch(e){}queueProgressSave()}
 function loadStudy(){try{const rh=localStorage.getItem('aidify_resetHour');if(rh!=null)state.resetHour=parseInt(rh)}catch(e){}if(!(state.resetHour>=0&&state.resetHour<=23))state.resetHour=4;const cur=studyDayKey();try{const raw=localStorage.getItem('aidify_study');if(raw){const o=JSON.parse(raw);if(o&&o.dayKey===cur){state.studyTotalMs=o.totalMs||0;state.studyDayKey=cur;return}}}catch(e){}state.studyTotalMs=0;state.studyDayKey=cur;saveStudy()}
 function addStudyMs(ms){const cur=studyDayKey();if(state.studyDayKey!==cur){state.studyTotalMs=0;state.studyDayKey=cur}state.studyTotalMs+=ms;saveStudy()}
 function setResetHour(h){h=parseInt(h);if(!(h>=0&&h<=23))h=4;state.resetHour=h;state.studyDayKey=studyDayKey();try{localStorage.setItem('aidify_resetHour',String(h))}catch(e){}saveStudy();render()}
 function dayStartMs(){const h=state.resetHour||0;const now=Date.now();const d=new Date();d.setHours(h,0,0,0);if(d.getTime()>now)d.setDate(d.getDate()-1);return d.getTime()}
 // ---- Persist study-day rollover, timer state, and current page across refreshes ----
 function ensureStudyDay(){const cur=studyDayKey();if(state.studyDayKey!==cur){state.studyTotalMs=0;state.studyDayKey=cur;saveStudy();return true}return false}
+/* ===== Account sync: progress follows the user, not the browser ===== */
+let _progressTimer=null;
+function queueProgressSave(){if(!state.userId)return;if(_progressTimer)clearTimeout(_progressTimer);_progressTimer=setTimeout(()=>{_progressTimer=null;saveProgress()},1200)}
+async function saveProgress(){try{if(!window.supabase||!state.userId)return;let sday='';try{sday=localStorage.getItem('aidify_streak_day')||''}catch(e){}await window.supabase.from('user_progress').upsert({user_id:state.userId,streak:state.user.streak||0,best_streak:state.user.bestStreak||0,streak_day:sday,study_ms:state.studyTotalMs||0,study_day:state.studyDayKey||'',reset_hour:state.resetHour||4,goals:state.goals||{},updated_at:new Date().toISOString()},{onConflict:'user_id'})}catch(e){}}
+async function loadProgress(){try{if(!window.supabase||!state.userId)return;const {data}=await window.supabase.from('user_progress').select('*').eq('user_id',state.userId).maybeSingle();if(data){try{localStorage.setItem('aidify_streak',String(data.streak||0));if(data.streak_day)localStorage.setItem('aidify_streak_day',data.streak_day);localStorage.setItem('aidify_beststreak',String(data.best_streak||0));if(data.reset_hour!=null)localStorage.setItem('aidify_resetHour',String(data.reset_hour));localStorage.setItem('aidify_study',JSON.stringify({dayKey:data.study_day||'',totalMs:data.study_ms||0}));if(data.goals)localStorage.setItem('aidify_goals',JSON.stringify(data.goals))}catch(e){}loadStudy();loadGoals();updateStreak();await saveProgress()}else{await saveProgress()}}catch(e){}}
 function saveTimer(){try{localStorage.setItem('aidify_timer',JSON.stringify(state.timer))}catch(e){}}
 function loadTimer(){try{const raw=localStorage.getItem('aidify_timer');if(!raw)return;const o=JSON.parse(raw);if(!o||typeof o!=='object')return;state.timer={mode:o.mode==='countdown'?'countdown':'stopwatch',running:!!o.running,base:o.base||0,startedAt:o.startedAt||0,setMs:o.setMs||1500000};if(state.timer.running){clearInterval(_timerInt);_timerInt=setInterval(timerRefresh,250)}}catch(e){}}
 function saveNav(){try{localStorage.setItem('aidify_nav',JSON.stringify({page:state.page,activeSubject:state.activeSubject,subjectTab:state.subjectTab}))}catch(e){}}
@@ -1178,7 +1197,7 @@ function updateStreak(){
   let best=0;try{best=parseInt(localStorage.getItem('aidify_beststreak')||'0',10)||0}catch(e){}
   if(streak>best){best=streak;try{localStorage.setItem('aidify_beststreak',String(best))}catch(e){}}
   try{localStorage.setItem('aidify_streak',String(streak));localStorage.setItem('aidify_streak_day',today)}catch(e){}
-  state.user.streak=streak;state.user.bestStreak=best;
+  state.user.streak=streak;state.user.bestStreak=best;queueProgressSave();
 }
 async function loadStudentCount(){try{if(!window.supabase)return;const {data}=await window.supabase.from('app_stats').select('value').eq('key','students').maybeSingle();if(data&&data.value!=null)state.studentCount=Number(data.value)}catch(e){}}
 async function refreshRank(){try{if(!window.supabase||!state.userId)return;const stars=totalStars();await window.supabase.from('leaderboard').upsert({user_id:state.userId,name:state.user.name,stars,updated_at:new Date().toISOString()},{onConflict:'user_id'});const {count:ahead}=await window.supabase.from('leaderboard').select('user_id',{count:'exact',head:true}).gt('stars',stars);const {count:total}=await window.supabase.from('leaderboard').select('user_id',{count:'exact',head:true});state.user.rank=(ahead||0)+1;state.leaderboardTotal=(total!=null?total:null)}catch(e){}}
@@ -1323,7 +1342,7 @@ function render(){const app=document.getElementById('app');ensureStudyDay();if(!
 async function initAuth()
   {while(!window.supabase){await new Promise(r=>setTimeout(r,50))}
   const {data:{session}}=await window.supabase.auth.getSession();
-  if(session){resetUserState(session.user.user_metadata?.full_name||session.user.email,session.user.user_metadata?.avatar);state.userId=session.user.id;await loadUserScores();await loadTopicalAttempts();await loadProfile();await loadCommunityPosts();state.loggedIn=true;loadNavInto()}
+  if(session){resetUserState(session.user.user_metadata?.full_name||session.user.email,session.user.user_metadata?.avatar);state.userId=session.user.id;await loadUserScores();await loadTopicalAttempts();await loadProfile();await loadCommunityPosts();await loadProgress();state.loggedIn=true;loadNavInto()}
   await loadTopicalQuestions();
   await loadMcqQuestions();
   await loadStudentCount();
