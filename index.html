@@ -667,10 +667,11 @@ html.theme-autumn{
   --shadow:0 8px 32px rgba(90,55,25,0.10);--shadow-lg:0 16px 48px rgba(90,55,25,0.16);
   --dm-btn-bg:rgba(197,106,52,0.15);--dm-btn-border:#C56A34;--dm-btn-color:#9C4A1E;
 }
-html.theme-autumn body{background:
+html.theme-autumn body{background:var(--warm)}
+html.theme-autumn body::before{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;background:
   radial-gradient(ellipse 80% 45% at 50% -5%, rgba(197,106,52,0.10) 0%, transparent 60%),
-  radial-gradient(ellipse 60% 50% at 90% 100%, rgba(156,74,30,0.09) 0%, transparent 60%),
-  var(--warm);}
+  radial-gradient(ellipse 60% 50% at 90% 100%, rgba(156,74,30,0.09) 0%, transparent 60%);
+  transform:translateZ(0);will-change:transform}
 html.theme-autumn .card,html.theme-autumn .card-sm,html.theme-autumn .question-card,html.theme-autumn .post-card,html.theme-autumn .subject-dash-card,html.theme-autumn .profile-header,html.theme-autumn .pricing-card,html.theme-autumn .feature-card,html.theme-autumn .step-card{background:rgba(250,240,225,0.94)}
 html.theme-autumn .badge{background:rgba(197,106,52,0.14);color:var(--sage-dark)}
 html.theme-autumn .pub-nav{background:rgba(243,231,214,0.88)}
