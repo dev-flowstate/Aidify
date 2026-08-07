@@ -676,25 +676,25 @@ html.theme-autumn .badge{background:rgba(197,106,52,0.14);color:var(--sage-dark)
 html.theme-autumn .pub-nav{background:rgba(243,231,214,0.88)}
 html.theme-autumn .sidebar{background:rgba(243,231,214,0.92)}
 html.theme-autumn.dark{
-  --warm:#0a0812;--cream:#140f1e;--text:#f3e2e2;--text-muted:#9a8a9e;
-  --sage:#e23b3b;--sage-light:#5a2030;--sage-dark:#ff6f6f;
-  --sky:#3a2440;--sky-dark:#8a6cff;--mint:#1a1030;--mint-accent:#ff5a7a;
-  --border:#2c1a2e;--border-light:#1e1424;--accent:#e23b3b;--accent-light:#5a2030;
-  --shadow:0 8px 28px rgba(0,0,0,0.7);--shadow-lg:0 20px 56px rgba(0,0,0,0.82);
-  --dm-btn-bg:rgba(226,59,59,0.14);--dm-btn-border:#e23b3b;--dm-btn-color:#ff6f6f;
+  --warm:#171009;--cream:#20180f;--text:#ecdfc9;--text-muted:#9c8a6f;
+  --sage:#c56a34;--sage-light:#5c3a22;--sage-dark:#e0954f;
+  --sky:#4a3620;--sky-dark:#c9a05c;--mint:#2a2013;--mint-accent:#cf8a4a;
+  --border:#33271a;--border-light:#241b11;--accent:#c56a34;--accent-light:#5c3a22;
+  --shadow:0 8px 28px rgba(0,0,0,0.6);--shadow-lg:0 20px 56px rgba(0,0,0,0.72);
+  --dm-btn-bg:rgba(197,106,52,0.14);--dm-btn-border:#c56a34;--dm-btn-color:#e0954f;
 }
-html.theme-autumn.dark body{background:#08060f}
+html.theme-autumn.dark body{background:#140d07}
 html.theme-autumn.dark body::before{background:
-  radial-gradient(circle at 50% 8%, rgba(226,40,40,0.30) 0%, rgba(226,40,40,0.10) 26%, transparent 52%),
-  radial-gradient(ellipse 70% 50% at 50% 106%, rgba(20,12,45,0.65) 0%, transparent 60%),
-  linear-gradient(180deg,#0b0714 0%,#0a0616 55%,#060310 100%);}
-html.theme-autumn.dark body::after{opacity:0.35}
-html.theme-autumn.dark .card,html.theme-autumn.dark .card-sm,html.theme-autumn.dark .question-card,html.theme-autumn.dark .post-card,html.theme-autumn.dark .subject-dash-card,html.theme-autumn.dark .profile-header,html.theme-autumn.dark .gen-filter,html.theme-autumn.dark .chapter-item,html.theme-autumn.dark .pricing-card,html.theme-autumn.dark .feature-card,html.theme-autumn.dark .step-card{background:#130e1e;border:1px solid #2c1a2e;border-top:1px solid rgba(226,59,59,0.10);box-shadow:var(--shadow)}
-html.theme-autumn.dark .subject-card{background:#130e1e;border-color:#2c1a2e}
-html.theme-autumn.dark .pub-nav{background:rgba(11,7,20,0.97);border-bottom:1px solid #2c1a2e}
-html.theme-autumn.dark .sidebar{background:#0a0714;border-right:1px solid #2c1a2e}
-html.theme-autumn.dark .badge{background:rgba(226,59,59,0.16);color:#ff9a9a}
-html.theme-autumn.dark ::-webkit-scrollbar-thumb{background:#5a2030}
+  radial-gradient(ellipse 90% 45% at 50% -8%, rgba(201,120,50,0.10) 0%, transparent 55%),
+  radial-gradient(ellipse 70% 40% at 50% 106%, rgba(120,60,25,0.22) 0%, transparent 60%),
+  linear-gradient(180deg,#181009 0%,#140c06 55%,#0f0904 100%);}
+html.theme-autumn.dark body::after{opacity:0.4}
+html.theme-autumn.dark .card,html.theme-autumn.dark .card-sm,html.theme-autumn.dark .question-card,html.theme-autumn.dark .post-card,html.theme-autumn.dark .subject-dash-card,html.theme-autumn.dark .profile-header,html.theme-autumn.dark .gen-filter,html.theme-autumn.dark .chapter-item,html.theme-autumn.dark .pricing-card,html.theme-autumn.dark .feature-card,html.theme-autumn.dark .step-card{background:#20170e;border:1px solid #33271a;border-top:1px solid rgba(201,120,50,0.10);box-shadow:var(--shadow)}
+html.theme-autumn.dark .subject-card{background:#20170e;border-color:#33271a}
+html.theme-autumn.dark .pub-nav{background:rgba(18,12,7,0.97);border-bottom:1px solid #33271a}
+html.theme-autumn.dark .sidebar{background:#130d06;border-right:1px solid #33271a}
+html.theme-autumn.dark .badge{background:rgba(201,120,50,0.16);color:#e0a05c}
+html.theme-autumn.dark ::-webkit-scrollbar-thumb{background:#5c3a22}
 /* RESPONSIVE */
 @media(max-width:768px){
   .pub-nav{padding:0 20px;height:60px}
@@ -1397,7 +1397,7 @@ function deletePost(id){askConfirm("Delete this post? This can't be undone.",()=
 async function doDeletePost(id){const {error}=await window.supabase.from('community_posts').delete().eq('id',id);if(error){toast('Could not delete: '+error.message);return}await loadCommunityPosts();render();toast('Post deleted')}
 
 function renderSettings(){
-  return `${renderSidebar()}<div class="main-content"><div class="page-header"><h1 style="font-size:26px;font-weight:800;padding-bottom:20px">Settings</h1></div><div class="page-body"><div class="card mb-4"><h3 style="font-weight:800;font-size:16px;margin-bottom:16px">Appearance</h3><div class="flex justify-between items-center mb-4 pb-3" style="border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap"><div><div class="font-semi text-sm">Theme</div><div class="text-xs text-muted">Forest greens, or warm Autumn / red-night</div></div><div class="flex gap-1" style="flex-wrap:wrap"><button class="btn btn-sm ${(state.palette||'forest')==='forest'?'btn-primary':'btn-secondary'}" onclick="setPalette('forest')">🌿 Forest</button><button class="btn btn-sm ${state.palette==='autumn'?'btn-primary':'btn-secondary'}" onclick="setPalette('autumn')">🍂 Autumn</button></div></div><div class="flex justify-between items-center"><div><div class="font-semi text-sm">Dark Mode</div><div class="text-xs text-muted">${state.palette==='autumn'?'Autumn: warm days · red Upside-Down nights':'Toggle light and dark'}</div></div><button class="btn btn-secondary" onclick="toggleDark();render()">${state.dark?'☀️ Light Mode':'🌊 Dark Mode'}</button></div></div><div class="card mb-4"><h3 style="font-weight:800;font-size:16px;margin-bottom:16px">Study</h3><div class="flex justify-between items-center"><div><div class="font-semi text-sm">Daily reset time</div><div class="text-xs text-muted">Your "studied today" total resets at this hour each day</div></div><select class="select" style="width:auto" onchange="setResetHour(this.value)">${Array.from({length:24},(_,h)=>`<option value="${h}" ${state.resetHour===h?'selected':''}>${String(h).padStart(2,'0')}:00</option>`).join('')}</select></div></div><div class="card mb-4"><h3 style="font-weight:800;font-size:16px;margin-bottom:16px">Grade goal</h3><div class="flex justify-between items-center" style="gap:12px;flex-wrap:wrap"><div><div class="font-semi text-sm">Target grades & marks</div><div class="text-xs text-muted">${goalSummaryLine()}</div></div><button class="btn btn-secondary" onclick="openGoalSetup()">${state.goals.year?'Edit goals':'Set goals'}</button></div></div><div class="card mb-4"><h3 style="font-weight:800;font-size:16px;margin-bottom:16px">Account</h3><div class="flex justify-between items-center mb-4 pb-3" style="border-bottom:1px solid var(--border)"><div><div class="font-semi text-sm">Name</div><div class="text-xs text-muted">${state.user.name}</div></div></div><div class="flex justify-between items-center"><div><div class="font-semi text-sm">Sign out</div><div class="text-xs text-muted">Log out of your Easify account</div></div><button class="btn btn-secondary" onclick="logout()">Log out</button></div></div></div></div>`;
+  return `${renderSidebar()}<div class="main-content"><div class="page-header"><h1 style="font-size:26px;font-weight:800;padding-bottom:20px">Settings</h1></div><div class="page-body"><div class="card mb-4"><h3 style="font-weight:800;font-size:16px;margin-bottom:16px">Appearance</h3><div class="flex justify-between items-center mb-4 pb-3" style="border-bottom:1px solid var(--border);gap:12px;flex-wrap:wrap"><div><div class="font-semi text-sm">Theme</div><div class="text-xs text-muted">Forest greens, or warm Autumn / red-night</div></div><div class="flex gap-1" style="flex-wrap:wrap"><button class="btn btn-sm ${(state.palette||'forest')==='forest'?'btn-primary':'btn-secondary'}" onclick="setPalette('forest')">🌿 Forest</button><button class="btn btn-sm ${state.palette==='autumn'?'btn-primary':'btn-secondary'}" onclick="setPalette('autumn')">🍂 Autumn</button></div></div><div class="flex justify-between items-center"><div><div class="font-semi text-sm">Dark Mode</div><div class="text-xs text-muted">${state.palette==='autumn'?'Autumn: warm days · rusty evenings':'Toggle light and dark'}</div></div><button class="btn btn-secondary" onclick="toggleDark();render()">${state.dark?'☀️ Light Mode':'🌊 Dark Mode'}</button></div></div><div class="card mb-4"><h3 style="font-weight:800;font-size:16px;margin-bottom:16px">Study</h3><div class="flex justify-between items-center"><div><div class="font-semi text-sm">Daily reset time</div><div class="text-xs text-muted">Your "studied today" total resets at this hour each day</div></div><select class="select" style="width:auto" onchange="setResetHour(this.value)">${Array.from({length:24},(_,h)=>`<option value="${h}" ${state.resetHour===h?'selected':''}>${String(h).padStart(2,'0')}:00</option>`).join('')}</select></div></div><div class="card mb-4"><h3 style="font-weight:800;font-size:16px;margin-bottom:16px">Grade goal</h3><div class="flex justify-between items-center" style="gap:12px;flex-wrap:wrap"><div><div class="font-semi text-sm">Target grades & marks</div><div class="text-xs text-muted">${goalSummaryLine()}</div></div><button class="btn btn-secondary" onclick="openGoalSetup()">${state.goals.year?'Edit goals':'Set goals'}</button></div></div><div class="card mb-4"><h3 style="font-weight:800;font-size:16px;margin-bottom:16px">Account</h3><div class="flex justify-between items-center mb-4 pb-3" style="border-bottom:1px solid var(--border)"><div><div class="font-semi text-sm">Name</div><div class="text-xs text-muted">${state.user.name}</div></div></div><div class="flex justify-between items-center"><div><div class="font-semi text-sm">Sign out</div><div class="text-xs text-muted">Log out of your Easify account</div></div><button class="btn btn-secondary" onclick="logout()">Log out</button></div></div></div></div>`;
 }
 
 async function loadProfile(){try{const {data:{user}}=await window.supabase.auth.getUser();if(!user)return;const {data}=await window.supabase.from('profiles').select('name,username').eq('id',user.id).maybeSingle();if(data){if(data.name)state.user.name=data.name;if(data.username)state.user.username=data.username}}catch(e){}}
